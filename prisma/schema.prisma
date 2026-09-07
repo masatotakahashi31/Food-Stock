@@ -3,6 +3,7 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +11,49 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model Category {
+  id           Int        @id @default(autoincrement())
+  categoryName String     @unique @map("category_name") @db.VarChar(100)
+  isFood       Boolean    @map("is_food")
+  foods        Food[]
+  shoppings    Shopping[]
+
+  @@map("category")
+}
+
+model Food {
+  id         Int      @id @default(autoincrement())
+  foodName   String   @map("food_name") @db.VarChar(100)
+  categoryId Int      @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
+  stocks     Stock[]
+
+  @@map("food")
+}
+
+model Stock {
+  id             Int       @id @default(autoincrement())
+  foodId         Int       @map("food_id")
+  food           Food      @relation(fields: [foodId], references: [id])
+  expirationDate DateTime? @map("expiration_date") @db.Date
+  stockQuantity  Int       @map("stock_quantity")
+  purchaseDate   DateTime  @map("purchase_date") @db.Date
+  memo           String?   @db.VarChar(100)
+
+  @@map("stock")
+}
+
+model Shopping {
+  id          Int      @id @default(autoincrement())
+  itemName    String   @map("item_name") @db.VarChar(100)
+  categoryId  Int      @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+  quantity    Int
+  isPurchased Boolean  @default(false) @map("is_purchased")
+  addType     String   @map("add_type") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("shopping")
 }
