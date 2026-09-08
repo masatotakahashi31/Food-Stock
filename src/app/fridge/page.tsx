@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import { DbNull } from '@prisma/client/runtime/client'
 
 export default async function FridgePage() {
   // Stock（在庫）テーブルからデータを取得
