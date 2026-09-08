@@ -1,6 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg'
-// 修正ここだけ: '@/generated/prisma/client' を '@prisma/client' に変更
-import { PrismaClient } from '@prisma/client'
+import {PrismaClient} from '@/generated/prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
