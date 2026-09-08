@@ -15,7 +15,9 @@ export async function addStock(formData: FormData){
     // 数量を数値にして取得
     const quantity = Number(formData.get('quantity'))
 
+    // フォームから送られた消費期限のデータを、まずは文字列（例: "2026-09-08" や 空文字 ""）として変数に保存
     const expirationDateString = formData.get('expirationDate') as string
+    // 「もし入力されていれば、文字列を日付データ（Date）に変換する。もし空っぽなら null にする」という条件分岐を行い、結果を変数に保存
     const expirationDate = expirationDateString ? new Date(expirationDateString) : null
 
     // 食品マスタ）テーブルの中から、条件に合う最初の1件を探して変数 food に入れます。後で中身を書き換える可能性があるため、const ではなく let で宣言
@@ -60,6 +62,7 @@ export async function addStock(formData: FormData){
             // 数量と現在の日時を指定
             stockQuantity: quantity,
             purchaseDate: new Date(),
+            // 日付が入力されていればその日付が、未入力なら null（空っぽ）がデータベースに保存
             expirationDate: expirationDate,
         }
     })
