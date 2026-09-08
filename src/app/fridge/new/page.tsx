@@ -11,7 +11,7 @@ export default async function NewStockPage() {
   return (
     <div>
       <h2>在庫の登録</h2>
-      切り出したフォーム部品に、
+      {/* 切り出したフォーム部品に、 */}
         {/* 「カテゴリ一覧」と「新規追加用の関数(addStock)」を渡して表示 */}
       <StockForm categories={categories} formAction={addStock} />
     </div>
