@@ -1,4 +1,5 @@
 //Prismaクライアントを読み込み
+import StockList from '@/components/StockList'
 import {prisma} from '@/lib/prisma'
 //ページ遷移用のLinkコンポーネントを読み込み
 import Link from 'next/link'
@@ -25,34 +26,7 @@ export default async function FridgePage(){
     <div>
       <h2>冷蔵庫の在庫一覧</h2>
       <Link href="/fridge/new">新しい食材を登録</Link>
-      <ul>
-        {/* 取得した stocks のデータを1件ずつ取り出してループ処理 */}
-        {stocks.map((stock) => (
-          // リストの1項目(被らない一意のキー)
-          <li key={stock.id}>
-            {/* 在庫の数量に加え、food を経由してたどり着いた食材名とcategoryのカテゴリ名をそれぞれ表示します。 */}
-            食材: {stock.food.foodName}/ カテゴリー: {stock.food.category.categoryName}/ 数量: {stock.stockQuantity}
-            {/* 消費期限のデータが存在する場合のみ表示する条件分岐 */}
-            {stock.expirationDate && (
-              // 消費期限を日本の日付形式にフォーマットして表示
-// 左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-              <span> / 期限: {stock.expirationDate.toLocaleDateString('ja-JP')}</span>
-            )}
-            {/* memoのデータが存在する場合のみ表示する条件分岐 */}
-            {stock.memo && (
-// &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-              <span> / メモ: {stock.memo}</span>
-            )}
-            {stock.purchaseDate && (
-// &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-              <span> / 購入日: {stock.purchaseDate.toLocaleDateString('ja-JP')}</span>
-            )}
-          </li>
-        ))}
-      </ul>
+      <StockList initialStocks={stocks} />
     </div>
   )
 }

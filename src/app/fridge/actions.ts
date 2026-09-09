@@ -3,6 +3,7 @@
 
 // データベースを操作するためのPrismaクライアントを読み込み
 import {prisma} from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
 //処理が終わった後に別の画面へ強制的に移動させるための関数を読み込み
 import {redirect} from 'next/navigation'
 
@@ -79,4 +80,17 @@ export async function addStock(formData: FormData){
 
     // すべて完了したら冷蔵庫一覧画面へ移動
     redirect('/fridge')
+}
+
+// この関数を呼び出すときに、「必ず数字（number）のIDを一つ渡し
+export async function deleteStockById(id: number){
+    // try の中身をやってみて、もしデータベースが見つからないなどのエラーが起きたら、アプリをクラッシュさせずに catch の方に逃げて、画面の裏側（コンソール）
+    try{
+        // データベースの処理が終わるまで「ここで待機
+        await prisma.stock.delete({
+            where: {id}
+        })
+    }catch (error) {
+        console.log("削除エラー",error)
+    }
 }
