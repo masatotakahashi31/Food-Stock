@@ -45,6 +45,11 @@ export default async function FridgePage(){
 // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
               <span> / メモ: {stock.memo}</span>
             )}
+            {stock.purchaseDate && (
+// &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
+// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
+              <span> / 購入日: {stock.purchaseDate.toLocaleDateString('ja-JP')}</span>
+            )}
           </li>
         ))}
       </ul>
