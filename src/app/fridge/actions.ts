@@ -108,3 +108,81 @@ export async function deleteStockById(id: number){
         console.log("削除エラー",error)
     }
 }
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ④ 更新（編集）機能
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+// フォームから送られてきたデータ（formData）を受け取って、在庫を更新する関数
+export async function updateStock(formData: FormData){
+    // 「更新したい在庫のID」を取り出し、数値(Number)に変換して変数 id に入れ
+    const id = Number(formData.get('id'))
+
+    // フォームから入力された「数量(quantity)」を取り出し、数値に変換して変数 stockQuantity に入れ
+    const stockQuantity = Number(formData.get('quantity'))
+
+    // フォームから入力された「メモ(memo)」を文字列(string)として取り出し、変数 memoString に入れ
+    const memoString = formData.get('memo') as string
+    // もし memoString に文字が入っていればそのまま使い、空っぽなら null（データなし）にして変数 memo に入れ
+    const memo =memoString ? memoString: null
+
+    // フォームから入力された「消費期限(expirationDate)」を文字列として取り出し、変数 expirationDateString に入れ
+    const expirationDateString = formData.get('expirationDate') as string
+    // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら null にして変数 expirationDate に入れ
+    const expirationDate = expirationDateString ? new Date(expirationDateString): null
+
+    // フォームから選択された「カテゴリのID(categoryId)」を取り出し、数値に変換して変数 categoryId に入れ
+    const categoryId = Number(formData.get('categoryId'))
+    // フォームから入力された「食材名(foodName)」を文字列として取り出し、変数 foodName に入れ
+    const foodName = formData.get('foodName') as string
+
+    // データベースの「食品マスタ(food)」から、入力された食材名と完全に一致する最初の1件を探し、変数 food に入れ
+    let food = await prisma.food.findFirst({
+        // 探す条件として「入力された食材名と完全に一致するデータ」を指定
+        where: {foodName: foodName}
+    })
+
+    // もし該当する食品データが見つかった（既に登録されていた）場合の分岐
+    if (food){
+        // 見つかった食品に紐付いているカテゴリIDと、今回画面で選択されたカテゴリIDが一致しない（別のカテゴリが選ばれた）場合の分岐
+        if (food.categoryId !== categoryId){
+            // Prismaの update 機能を使ってデータを上書きし、その結果で変数 food を書き換え
+            food = await prisma.food.update({
+                // 上書きする対象として、見つかった食品データのIDを指定
+                where: {id: food.id},
+                // 変更する内容として、カテゴリIDを「今回新しく画面で選ばれたカテゴリID」に書き換え
+                data: {categoryId: categoryId},
+            })
+        // カテゴリ不一致の分岐を閉じます。（カテゴリが一致した場合は何もせず、見つかった food のデータをそのまま使い回します
+        }
+    // もし該当する食品データが見つからなかった（新規の食材だった）場合の分岐
+    } else {
+        // 新しい食品データを food テーブルに登録し、その結果を変数 food に上書き
+        food = await prisma.food.create({
+            // 入力された食材名と選択されたカテゴリIDを登録データとして指定
+            data: {
+                foodName: foodName,
+                categoryId: categoryId,
+            }
+        // 登録処理を終了
+        })
+    // 見つからなかった場合の分岐を閉じ
+    }
+
+    // 実際の「在庫(stock)」のデータを上書き更新する処理
+    await prisma.stock.update({
+        // 更新する条件：一番最初に受け取った、隠し項目の「在庫ID」と同じものを対象
+        where: {id:id},
+        data: {
+            // （foodId）を、上で見つけた（または作った）食品データのID（food.id）に貼り替え
+            foodId:food.id,
+            // 「数量」を上書き
+            stockQuantity,
+            // 「消費期限」を上書き
+            expirationDate,
+            // 「メモ」を上書き
+            memo,
+        }
+    })
+    redirect('/fridge')
+}

@@ -2,6 +2,7 @@
 
 import {useState} from 'react'
 import {deleteStockById} from '@/app/fridge/actions'
+import Link from 'next/link'
 
 // 1. カテゴリの型
 type Category = {
@@ -73,6 +74,10 @@ export default function StockList({initialStocks}: Props){
         // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
                       <span> / 購入日: {stock.purchaseDate.toLocaleDateString('ja-JP')}</span>
                     )}
+                    <Link
+                        href={`/fridge/${stock.id}/edit`}
+                        style={{color: 'blue', marginLeft: '10px'}}
+                        >編集</Link>
                     <button
                     onClick={() => handleDelete(stock.id)}
                     style={{color:'red',marginLeft:'10px'}}
