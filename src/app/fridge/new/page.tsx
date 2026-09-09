@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { addStock } from '../actions'
 
 import StockForm from '@/components/StockForm'
+import Link from 'next/link'
 
 //在庫登録画面を表示するメイン関数を定義
 export default async function NewStockPage() {
@@ -14,6 +15,10 @@ export default async function NewStockPage() {
       {/* 切り出したフォーム部品に、 */}
         {/* 「カテゴリ一覧」と「新規追加用の関数(addStock)」を渡して表示 */}
       <StockForm categories={categories} formAction={addStock} />
+      <div style={{marginTop: '20px'}}>
+                <Link href="/fridge">一覧に戻る</Link>
+            </div>
     </div>
+    
   )
 }
