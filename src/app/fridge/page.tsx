@@ -36,8 +36,14 @@ export default async function FridgePage(){
             {stock.expirationDate && (
               // 消費期限を日本の日付形式にフォーマットして表示
 // 左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-// 左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
+// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
               <span> / 期限: {stock.expirationDate.toLocaleDateString('ja-JP')}</span>
+            )}
+            {/* memoのデータが存在する場合のみ表示する条件分岐 */}
+            {stock.memo && (
+// &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
+// &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
+              <span> / メモ: {stock.memo}</span>
             )}
           </li>
         ))}
