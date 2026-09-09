@@ -1,33 +1,32 @@
-import { prisma } from '@/lib/prisma'
-import { DbNull } from '@prisma/client/runtime/client'
+//Prismaクライアントを読み込み
+import StockList from '@/components/StockList'
+import {prisma} from '@/lib/prisma'
+//ページ遷移用のLinkコンポーネントを読み込み
+import Link from 'next/link'
 
-export default async function FridgePage() {
-  // Stock（在庫）テーブルからデータを取得
+//在庫一覧画面を表示する関数を定義
+export default async function FridgePage(){
+  //stock テーブルからデータを複数取得
   const stocks = await prisma.stock.findMany({
-    // Stockテーブルには「foodId」しかないので、食材の名前を表示するためにFoodテーブルも結合して取得します
+    //関連するテーブルのデータを一緒に取得する指示
     include: {
-      food: true, 
+      //stock に直接紐付いている food テーブルのデータを取得
+      food: {
+        //さらに food テーブルに紐付いているデータを取得
+        include: {
+          category: true,
+        },
+      },
     },
-    // 賞味期限（expirationDate）が近い順（昇順）に並び替え
-    orderBy: { expirationDate: 'asc' }, 
+    //消費期限の昇順（古い順）に並び替えます。
+    orderBy: {expirationDate: 'asc'},
   })
 
-  return (
-    <main style={{ padding: '2rem' }}>
-        <h1>DB接続確認</h1>
-      <h1>冷蔵庫の在庫一覧({stocks.length} 件)</h1>
-      <ul>
-        {stocks.map((stock) => (
-          <li key={stock.id} style={{ marginBottom: '0.5rem' }}>
-            📦 <strong>{stock.food.foodName}</strong> （数量: {stock.stockQuantity}） 
-            <br />
-            <small style={{ color: 'gray' }}>
-              期限: {stock.expirationDate ? stock.expirationDate.toLocaleDateString('ja-JP') : '未設定'} 
-              {stock.memo && ` | メモ: ${stock.memo}`}
-            </small>
-          </li>
-        ))}
-      </ul>
-    </main>
+  return(
+    <div>
+      <h2>冷蔵庫の在庫一覧</h2>
+      <Link href="/fridge/new">新しい食材を登録</Link>
+      <StockList initialStocks={stocks} />
+    </div>
   )
 }
