@@ -1,83 +1,102 @@
 "use client"
 
-import {deleteShoppingItem} from '@/app/shopping/actions'
-import {useState} from 'react'
+// 他のファイルから必要な部品を読み込んでいます。
+import { deleteShoppingItem, toggleShoppingItem } from '@/app/shopping/actions'
+// データベースをいじるための自作関数、下はReactの基本機能である「状態管理
+import { useState, } from 'react'
 
-// 1件分のお買い物データが「どんな形のデータか」というルール（型
+// 「お買い物データ1件分」の中身のルール（型）を決めています。どんな名前の、どんな種類のデータが入っているかを定義
 type ShoppingItem = {
     id: number
     itemName: string
     quantity: number
-    // カテゴリ情報は、さらにその中にデータを持つ構造
+    isPurchased: boolean
     category: {
         categoryName: string
     }
 }
 
-// 親（page.tsx）から受け取る荷物（Props）のルール
+// 親画面（page.tsx）から受け取るデータのルールです。「さっき決めた ShoppingItem のルールの配列（リスト）を items という名前で受け取る
 type Props = {
-    // items」という名前で、さっき決めたルール（ShoppingItem）の「配列（[] = 複数個のリスト）」を受け取り
     items: ShoppingItem[]
 }
 
-// 親から渡された荷物の中から「items」だけを取り出し、さっき決めた Props のルールに従っていることを確認
-export default function ShoppingList({items}: Props){
+// 画面を作るメインの関数です。親から items を受け取ってスタート
+export default function ShoppingList({ items }: Props) {
 
+    // 親から貰ったデータを、手元のメモ帳（localItems）に書き写し
     const [localItems, setLocalItems] = useState(items)
 
-    // これから作成
-    const handlePurchase = (id: number) => {
-        alert(`お買い物ID: ${id}を買ったことにする処理をこれから作成`)
-    }
+    // チェックボックスを押した時の処理です。現在の状態（trueかfalse）を受け取り、! をつけて「逆」に
+    const handleToggle = async (id: number, currentStatus: boolean) => {
+        const nextStatus = !currentStatus
 
-    //削除
-    const handleDelete = async(id: number) => {
-        // 先に手元のメモ帳(localItems)から、削除するデータを除外した「新しいリスト」を作る
-        const newItems = localItems.filter((item) => item.id !== id)
-        // 画面の表示を新しいリストに書き換える
+        // メモ帳を1行ずつ確認（map）して、押されたIDと同じ行だけ新しい状態（nextStatus）に上書きし、画面を即座に切り替え
+        const newItems = localItems.map((item) => {
+            if (item.id === id) {
+                return {...item, isPurchased: nextStatus}
+            }else {
+                return item
+            }
+        })
         setLocalItems(newItems)
-        // 裏側の処理を呼び出して、データベースからも削除する
-        await deleteShoppingItem(id)
+
+        // （サーバー）に通信して、実際のデータベースも同じ状態に書き換え
+        await toggleShoppingItem(id, nextStatus)
     }
 
-    return(
-        <table>
-            <thead>
-                <tr>
-                    <th>カテゴリ</th>
-                    <th>品名</th>
-                    <th>数量</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {/* { } でJavaScriptの計算を始めます。「受け取ったデータの件数（length）が0件ですか？」と質問 */}
-                {localItems.length === 0 ? (
-                    // もし0件だった場合）データがない時用の行
+    // ▼ 削除ボタンの処理
+    const handleDelete = async (id: number) => {
+        // 押されたID「以外」のデータを残す（filter）
+            const newItems = localItems.filter((item) => item.id !== id)
+            setLocalItems(newItems)
+            // その後にデータベースからも削除
+            await deleteShoppingItem(id)
+    }
+
+    return (
+        <div>
+            <table>
+                <thead>
                     <tr>
-                        <td colSpan={4}>買うものは特にありません</td>
+                        <th>状態</th>
+                        <th>カテゴリ</th>
+                        <th>品名</th>
+                        <th>数量</th>
+                        <th>操作</th>
                     </tr>
-                    // 1件以上データがあったら）以下を表示
-                ) : (
-                    // 受け取ったデータ（items）を1件ずつ取り出し（仮の名前を item とします）、データの件数分だけ、以下の行を繰り返し生成
-                    items.map((item) => (
-                        // keyが必要なので、データの id
-                        <tr key={item.id}>
-                            <td>{item.category.categoryName}</td>
-                            <td>{item.itemName}</td>
-                            <td>{item.quantity}</td>
-                            <td>
-                                <button onClick={() => handlePurchase(item.id)}>
-                                    買った！
-                                </button>
-                                <button onClick={() => handleDelete(item.id)}>
-                                    削除
-                                </button>
-                            </td>
+                </thead>
+                <tbody>
+                    {/* もしメモ帳が0件なら『空です』と表示し、そうでないなら以下を表示する」という条件分岐 */}
+                    {localItems.length === 0 ? (
+                        <tr>
+                            <td colSpan={5}>お買い物リストは空です</td>
                         </tr>
-                    ))
-                )}
-            </tbody>
-        </table>
+                    ) : (
+                        // メモ帳のデータを1件ずつ取り出し、表の行（<tr>）を作ります。Reactのルールで、行ごとに固有の目印（key）
+                        localItems.map((item) => (
+                            <tr key={item.id}>
+                                <td>
+                                <label style={{cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={item.isPurchased}
+                                        onChange={() => handleToggle(item.id, item.isPurchased)}
+                                        style={{marginRight: '8px', transform: 'scale(1.2'}}
+                                    />
+                                    {item.isPurchased ? "購入済み" : "未購入"}
+                                </label></td>
+                                <td>{item.category.categoryName}</td>
+                                <td>{item.itemName}</td>
+                                <td>{item.quantity}</td>
+                                <td>
+                                    <button onClick={() => handleDelete(item.id)}>削除</button>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
     )
 }

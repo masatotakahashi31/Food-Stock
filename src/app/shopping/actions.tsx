@@ -11,10 +11,10 @@ export async function deleteShoppingItem(id: number) {
     revalidatePath('/shopping')
 }
 
-export async function purchaseShoppingItem(id: number) {
+export async function toggleShoppingItem(id: number, isPurchased: boolean) {
     await prisma.shopping.update({
         where: {id: id},
-        data: {isPurchased: true}
+        data: {isPurchased: isPurchased}
     })
     revalidatePath('/shopping')
 }
