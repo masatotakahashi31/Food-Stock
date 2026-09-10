@@ -1,5 +1,3 @@
-import { readRouteCacheEntry } from "next/dist/client/components/segment-cache/cache"
-
 type Category = {
     id: number
     categoryName:string
