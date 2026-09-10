@@ -39,6 +39,41 @@ export default function StockList({initialStocks}: Props){
     // setstocksはこのメモ帳を書き換えるための専用の関数
     const [stocks, setstocks] = useState(initialStocks)
 
+    // 消費期限（expirationDate）」を受け取って、それに合わせた「色の設定（スタイル）」を返す関数
+    const getHighlightStyle = (expirationDate: Date | null) => {
+        // 消費期限が登録されていなければ（null)なら、何も色をつけない
+        if (!expirationDate) return {}
+
+        // 現在の「日付と時間（例：2026年9月10日 15:33）」を取得
+        const today = new Date()
+        // 時間を「0時0分0秒0ミリ秒」にリセットします。これをしないと、「今日の夕方」と「今日の朝」の比較でズレが生じてしまうため、純粋に「日付」で判定
+        today.setHours(0, 0, 0, 0)
+
+        // 食材の「消費期限」も日付データに変換し、時間を「0時0分0秒0ミリ秒」にリセット
+        const expDate = new Date(expirationDate)
+        expDate.setHours(0, 0, 0, 0)
+
+        // 日数の差を計算
+        // .getTime() を使うと、日付を「1970年から何ミリ秒経ったか」というとんでもなく大きな数字に変換できます。その数字同士を引き算して、「2つの日付の差（ミリ秒）」を出します
+        const diffTime = expDate.getTime() - today.getTime()
+        // さっき計算したミリ秒を、「日数」に直します。
+// （1000ミリ秒 × 60秒 × 60分 × 24時間 ＝ 1日）。Math.ceil は端数が出た時のための切り上げ処理
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+        // ▼ 日数によって色を変える
+        // もし計算した日数が0より小さければ（マイナスなら）、すでに期限を過ぎているので、背景を薄い赤、文字を
+        if (diffDays < 0) {
+            // すでに期限切れ：薄い赤色の背景と、濃い赤の文字
+            return { backgroundColor: '#ffe4e6', color: '#e11d48', padding: '10px', borderRadius: '5px' }
+          //2日以内：薄い黄色の背景と、濃いオレンジの文字
+        } else if (diffDays <= 2) {
+            return { backgroundColor: '#fef3c7', color: '#d97706', padding: '10px', borderRadius: '5px' }
+        }
+
+        // 上のどちらにも当てはまらない（期限まで3日以上ある）場合は、色を変えず、少しだけ余白（padding）をつける設定
+        return { padding: '10px' } 
+    }
+
     // 削除ボタンが押された時に動く関数（引数として、押された項目の id を受け取り
     const handleDelete = async (id: number) =>{
         // 今のメモ帳(stocks)の中から、「押されたidとは『違う(!==)』データ」だけを残した新しいリストを作り
@@ -55,9 +90,13 @@ export default function StockList({initialStocks}: Props){
                 {/* 取得した stocks のデータを1件ずつ取り出してループ処理 */}
                 {stocks.map((stock) => (
                   // リストの1項目(被らない一意のキー)
-                  <li key={stock.id}>
+                  <li key={stock.id}
+                  // スプレッド構文） が超重要です！これは「関数から返ってきた箱（オブジェクト）の中身を展開して、ここに並べる
+                  style={{ marginBottom: '15px', ...getHighlightStyle(stock.expirationDate)}}
+                  >
                     {/* 在庫の数量に加え、food を経由してたどり着いた食材名とcategoryのカテゴリ名をそれぞれ表示します。 */}
-                    食材: {stock.food.foodName}/ カテゴリー: {stock.food.category.categoryName}/ 数量: {stock.stockQuantity}
+                    {/* strongは太字 */}
+                    <strong>食材: {stock.food.foodName}</strong>/ カテゴリー: {stock.food.category.categoryName}/ 数量: {stock.stockQuantity}
                     {/* 消費期限のデータが存在する場合のみ表示する条件分岐 */}
                     {stock.expirationDate && (
                       // 消費期限を日本の日付形式にフォーマットして表示
