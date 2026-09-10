@@ -1,5 +1,8 @@
 "use client"
 
+import {deleteShoppingItem} from '@/app/shopping/actions'
+import {useState} from 'react'
+
 // 1件分のお買い物データが「どんな形のデータか」というルール（型
 type ShoppingItem = {
     id: number
@@ -19,13 +22,22 @@ type Props = {
 
 // 親から渡された荷物の中から「items」だけを取り出し、さっき決めた Props のルールに従っていることを確認
 export default function ShoppingList({items}: Props){
+
+    const [localItems, setLocalItems] = useState(items)
+
     // これから作成
     const handlePurchase = (id: number) => {
         alert(`お買い物ID: ${id}を買ったことにする処理をこれから作成`)
     }
 
-    const handleDelete = (id: number) => {
-        alert(`お買い物ID: ${id}を削除する機能をこれから作成`)
+    //削除
+    const handleDelete = async(id: number) => {
+        // 先に手元のメモ帳(localItems)から、削除するデータを除外した「新しいリスト」を作る
+        const newItems = localItems.filter((item) => item.id !== id)
+        // 画面の表示を新しいリストに書き換える
+        setLocalItems(newItems)
+        // 裏側の処理を呼び出して、データベースからも削除する
+        await deleteShoppingItem(id)
     }
 
     return(
@@ -40,7 +52,7 @@ export default function ShoppingList({items}: Props){
             </thead>
             <tbody>
                 {/* { } でJavaScriptの計算を始めます。「受け取ったデータの件数（length）が0件ですか？」と質問 */}
-                {items.length === 0 ? (
+                {localItems.length === 0 ? (
                     // もし0件だった場合）データがない時用の行
                     <tr>
                         <td colSpan={4}>買うものは特にありません</td>
