@@ -3,9 +3,11 @@
 import {useState} from 'react'
 import {deleteStockById} from '@/app/fridge/actions'
 import Link from 'next/link'
+import QuickAddButton from './QuickAddButton'
 
 // 1. カテゴリの型
 type Category = {
+  id: number
   categoryName: string
 }
 
@@ -74,6 +76,18 @@ export default function StockList({initialStocks}: Props){
         // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
                       <span> / 購入日: {stock.purchaseDate.toLocaleDateString('ja-JP')}</span>
                     )}
+                    <span style={{ marginLeft: '15px' }}>
+                        
+                        {/* ★ ワンタップ追加ボタン */}
+                        {/* QuickAddButton という部品（コンポーネント）をここに呼び出して配置 */}
+                        <QuickAddButton 
+                        // 食材のカテゴリIDはこれだよ」とデータを渡して
+                            categoryId={stock.food.category.id} 
+                            // この食材の名前（例：にんじん）はこれだよ」とデータを渡しています
+                            itemName={stock.food.foodName} 
+                            // 買い物リストには『1個』追加してね」とデータを渡しています
+                            quantity={1} 
+                        />
                     <Link
                         href={`/fridge/${stock.id}/edit`}
                         style={{color: 'blue', marginLeft: '10px'}}
@@ -82,6 +96,7 @@ export default function StockList({initialStocks}: Props){
                     onClick={() => handleDelete(stock.id)}
                     style={{color:'red',marginLeft:'10px'}}
                     >削除</button>
+                    </span>
                   </li>
                 ))}
               </ul>

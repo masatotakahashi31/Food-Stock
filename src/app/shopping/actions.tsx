@@ -85,6 +85,47 @@ export async function editShoppingItem(id: number, formData: FormData) {
     redirect('/shopping')
 }
 
+// データベースを操作する処理　ボタンから「カテゴリID」「名前」「数量」の3つのデータを受け取ります
+export async function quickAddShoppingItem(categoryId: number, itemName: string, quantity: number) {
+    // 「既存のデータ（existingItem）」という箱を用意し、Prisma（データベース操作ツール）を使って、条件に合うデータを「1件だけ探し
+    const existingItem = await prisma.shopping.findFirst({
+        // 探す条件（where）です。「ボタンから受け取った品名と同じ名前」かつ「まだ買ってない（isPurchased: false）」データを探します
+        where: {
+            itemName: itemName,
+            isPurchased: false,
+        }
+    })
+
+    // 「もし条件に合うデータが既に見つかったら？」の分岐
+    if (existingItem) {
+        // Prismaを使って、すでにあるデータを「上書き
+        await prisma.shopping.update({
+            // 上書きする相手は、「さっき見つけたデータのID」と指定
+            where: { id: existingItem.id },
+            // 変更する中身（data）です。元々入っていた数量（existingItem.quantity）に、今回追加したい数量（quantity）を足し算して保存
+            data: {
+                quantity: existingItem.quantity + quantity,
+            },
+        })
+        // もしデータが見つからなかったら（リストにまだ無い新しい品物だったら）？」の分岐
+    } else {
+        // Prismaを使って、新しいデータを「新規作成
+        await prisma.shopping.create({
+            // 保存する中身です。受け取ったデータをそのまま入れつつ、addType に「在庫から追加」という目印の文字をセットして保存
+            data: {
+                categoryId: categoryId,
+                itemName: itemName,
+                quantity: quantity,
+                addType: '在庫から追加', // ★ どこから追加されたかの記録！
+            }
+        })
+    }
+
+    // 更新が終わったら、買い物リストと在庫画面（冷蔵庫）のキャッシュを捨てて最新にする
+    revalidatePath('/shopping')
+    revalidatePath('/fridge') 
+}
+
 //constで良い理由
 // 新規のお買い物だった場合（else の中）
 // ビフォー： existingItem ＝ 空っぽ（null）
