@@ -19,7 +19,7 @@ type Props = {
 
 // 親から渡された荷物の中から「items」だけを取り出し、さっき決めた Props のルールに従っていることを確認
 export default function ShoppingList({items}: Props){
-    // 買った！」ボタンが押された時に動く処理を作ります。押された行の id （数字）を受け取り
+    // これから作成
     const handlePurchase = (id: number) => {
         alert(`お買い物ID: ${id}を買ったことにする処理をこれから作成`)
     }
