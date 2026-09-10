@@ -5,6 +5,7 @@ import { deleteShoppingItem, toggleShoppingItem } from '@/app/shopping/actions'
 // データベースをいじるための自作関数、下はReactの基本機能である「状態管理
 import { useState, } from 'react'
 import Link from 'next/link'
+import TransferToFridgeButton from './TransferToFridgeButton'
 
 // 「お買い物データ1件分」の中身のルール（型）を決めています。どんな名前の、どんな種類のデータが入っているかを定義
 type ShoppingItem = {
@@ -14,6 +15,7 @@ type ShoppingItem = {
     isPurchased: boolean
     category: {
         categoryName: string
+        isFood: boolean
     }
 }
 
@@ -53,6 +55,13 @@ export default function ShoppingList({ items }: Props) {
             setLocalItems(newItems)
             // その後にデータベースからも削除
             await deleteShoppingItem(id)
+    }
+
+    
+    const handleTransferComplete = (id: number) => {
+        // 移行されたアイテム「以外」を残してメモ帳を上書きする
+        const newItems = localItems.filter((item) => item.id !== id)
+        setLocalItems(newItems)
     }
 
     return (
@@ -95,6 +104,12 @@ export default function ShoppingList({ items }: Props) {
                                         <button style={{marginRight: '8px'}}>編集</button>
                                     </Link>
                                     <button onClick={() => handleDelete(item.id)}>削除</button>
+                                    <TransferToFridgeButton 
+                                    shoppingId={item.id} 
+                                    isFood={item.category.isFood} 
+                                    isPurchased={item.isPurchased} 
+                                    onTransferComplete={() => handleTransferComplete(item.id)}
+                                    />
                                 </td>
                             </tr>
                         ))

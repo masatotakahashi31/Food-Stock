@@ -126,6 +126,61 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
     revalidatePath('/fridge') 
 }
 
+// ★ 購入済みアイテムを冷蔵庫（在庫）へ移行する関数
+export async function transferToFridge(shoppingId: number) {
+    // 1. お買い物リストのデータを取得（カテゴリの isFood も一緒に取得する）
+    const item = await prisma.shopping.findUnique({
+        where: { id: shoppingId },
+        include: { category: true } // ★リレーション先のカテゴリ情報も引き出す
+    })
+
+    // 安全装置（エラーチェック）
+    if (!item) throw new Error("データが見つかりません")
+    if (!item.isPurchased) throw new Error("まだ購入されていません")
+    
+    // ★ 要件クリア：非食品（isFood = false）はバックエンドでもしっかり弾く！
+    if (!item.category.isFood) {
+        throw new Error("食品ではないため冷蔵庫に移行できません")
+    }
+
+    // 2. 食材マスタ（Food）を検索 or 新規作成（Find or Create）
+    // まずは同じ名前・同じカテゴリの食材マスタがすでに存在するか探す
+    let food = await prisma.food.findFirst({
+        where: {
+            foodName: item.itemName,
+            categoryId: item.categoryId,
+        }
+    })
+
+    // マスタに無ければ、裏側でこっそり自動作成する
+    if (!food) {
+        food = await prisma.food.create({
+            data: {
+                foodName: item.itemName,
+                categoryId: item.categoryId,
+            }
+        })
+    }
+
+    // 3. 取得（または作成）した食材マスタのIDを使って、在庫（Stock）に登録
+    await prisma.stock.create({
+        data: {
+            foodId: food.id,
+            stockQuantity: item.quantity,
+            purchaseDate: new Date(), // 購入日は「今日」として登録
+        }
+    })
+
+    // 4. 移行完了後、お買い物リストからは削除する（移行＝移動のため）
+    await prisma.shopping.delete({
+        where: { id: shoppingId }
+    })
+
+    // キャッシュをクリアして画面を最新化
+    revalidatePath('/shopping')
+    revalidatePath('/fridge')
+}
+
 //constで良い理由
 // 新規のお買い物だった場合（else の中）
 // ビフォー： existingItem ＝ 空っぽ（null）
