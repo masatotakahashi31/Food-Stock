@@ -4,6 +4,7 @@
 import { deleteShoppingItem, toggleShoppingItem } from '@/app/shopping/actions'
 // データベースをいじるための自作関数、下はReactの基本機能である「状態管理
 import { useState, } from 'react'
+import Link from 'next/link'
 
 // 「お買い物データ1件分」の中身のルール（型）を決めています。どんな名前の、どんな種類のデータが入っているかを定義
 type ShoppingItem = {
@@ -90,6 +91,9 @@ export default function ShoppingList({ items }: Props) {
                                 <td>{item.itemName}</td>
                                 <td>{item.quantity}</td>
                                 <td>
+                                    <Link href={`/shopping/${item.id}/edit`}>
+                                        <button style={{marginRight: '8px'}}>編集</button>
+                                    </Link>
                                     <button onClick={() => handleDelete(item.id)}>削除</button>
                                 </td>
                             </tr>

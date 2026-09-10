@@ -68,6 +68,23 @@ export async function addShoppingItem(formData: FormData) {
     redirect('/shopping')
 }
 
+export async function editShoppingItem(id: number, formData: FormData) {
+    const categoryId = Number(formData.get('categoryId'))
+    const itemName = formData.get('itemName') as string
+    const quantity = Number(formData.get('quantity'))
+
+    await prisma.shopping.update({
+        where: {id: id},
+        data: {
+            categoryId: categoryId,
+            itemName: itemName,
+            quantity: quantity,
+        }
+    })
+    revalidatePath('/shopping')
+    redirect('/shopping')
+}
+
 //constで良い理由
 // 新規のお買い物だった場合（else の中）
 // ビフォー： existingItem ＝ 空っぽ（null）
