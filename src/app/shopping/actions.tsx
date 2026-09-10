@@ -4,22 +4,37 @@ import {prisma} from '@/lib/prisma'
 import {revalidatePath} from 'next/cache'
 import {redirect} from 'next/navigation'
 
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ① 削除機能
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function deleteShoppingItem(id: number) {
+    // データベースから、指定されたIDと一致するお買い物データを削除します
     await prisma.shopping.delete({
         where: {id: id}
     })
+    // 削除が終わったら、お買い物リスト画面の古いキャッシュ（記憶）を捨てて最新にします
     revalidatePath('/shopping')
 }
 
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ② 状態切り替え（購入済みチェック）機能
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function toggleShoppingItem(id: number, isPurchased: boolean) {
+    // データベースの該当データを、チェックボックスの最新の状態（true/false）で上書きします
     await prisma.shopping.update({
         where: {id: id},
         data: {isPurchased: isPurchased}
     })
+    // 更新が終わったら画面を最新状態にします
     revalidatePath('/shopping')
 }
 
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ③ 新規追加機能
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function addShoppingItem(formData: FormData) {
+    // 画面のフォーム（入力欄）から送られてきたデータを取り出します
+    // ※文字として届くので、数字として扱いたいものは Number() で変換します
     const categoryId = Number(formData.get('categoryId'))
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
@@ -68,11 +83,16 @@ export async function addShoppingItem(formData: FormData) {
     redirect('/shopping')
 }
 
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ④ 更新（編集）機能
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function editShoppingItem(id: number, formData: FormData) {
+    // 編集画面のフォームから送られてきた最新のデータを取り出します
     const categoryId = Number(formData.get('categoryId'))
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
 
+    // 指定されたIDのデータを、画面で入力された新しい内容で上書き（update）します
     await prisma.shopping.update({
         where: {id: id},
         data: {
@@ -81,11 +101,16 @@ export async function editShoppingItem(id: number, formData: FormData) {
             quantity: quantity,
         }
     })
+    
+    // 更新が終わったら、一覧画面のキャッシュを最新にしてから、一覧画面へ強制移動します
     revalidatePath('/shopping')
     redirect('/shopping')
 }
 
-// データベースを操作する処理　ボタンから「カテゴリID」「名前」「数量」の3つのデータを受け取ります
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ⑤ ワンタップ追加機能（冷蔵庫からお買い物リストへ）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// データベースを操作する処理 ボタンから「カテゴリID」「名前」「数量」の3つのデータを受け取ります
 export async function quickAddShoppingItem(categoryId: number, itemName: string, quantity: number) {
     // 「既存のデータ（existingItem）」という箱を用意し、Prisma（データベース操作ツール）を使って、条件に合うデータを「1件だけ探し
     const existingItem = await prisma.shopping.findFirst({
@@ -126,6 +151,9 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
     revalidatePath('/fridge') 
 }
 
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ⑥ 一括移行機能（お買い物リストから冷蔵庫へ）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ★ 購入済みアイテムを冷蔵庫（在庫）へ移行する関数
 export async function transferToFridge(shoppingId: number) {
     // 1. お買い物リストのデータを取得（カテゴリの isFood も一緒に取得する）
@@ -181,7 +209,10 @@ export async function transferToFridge(shoppingId: number) {
     revalidatePath('/fridge')
 }
 
-//constで良い理由
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ⑦ 学習メモ
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// constで良い理由
 // 新規のお買い物だった場合（else の中）
 // ビフォー： existingItem ＝ 空っぽ（null）
 // 処理： データベースに新しく「牛乳」を登録（create）します。データベースの中には新しいID付きで牛乳が保存されます。

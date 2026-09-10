@@ -1,12 +1,21 @@
 "use client"
 
-// 他のファイルから必要な部品を読み込んでいます。
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ① インポート（必要な部品の読み込み）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// データベースをいじるための自作関数（サーバー側で動く処理）
 import { deleteShoppingItem, toggleShoppingItem } from '@/app/shopping/actions'
-// データベースをいじるための自作関数、下はReactの基本機能である「状態管理
-import { useState, } from 'react'
+// Reactの基本機能である「状態管理（画面のデータを記憶して書き換える機能）」
+import { useState } from 'react'
+// 画面遷移のためのリンク部品
 import Link from 'next/link'
+// さっき作った「冷蔵庫へ移行」ボタンの部品
 import TransferToFridgeButton from './TransferToFridgeButton'
 
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ② 型定義（データルールの設定）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // 「お買い物データ1件分」の中身のルール（型）を決めています。どんな名前の、どんな種類のデータが入っているかを定義
 type ShoppingItem = {
     id: number
@@ -24,13 +33,21 @@ type Props = {
     items: ShoppingItem[]
 }
 
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ③ メインコンポーネント（画面の描画と操作）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // 画面を作るメインの関数です。親から items を受け取ってスタート
 export default function ShoppingList({ items }: Props) {
 
     // 親から貰ったデータを、手元のメモ帳（localItems）に書き写し
+    // ※ 画面をサクサク動かすため、データベースを待たずにまずは手元のメモ帳を書き換えます（オプティミスティックUIアップデートと呼びます）
     const [localItems, setLocalItems] = useState(items)
 
-    // チェックボックスを押した時の処理です。現在の状態（trueかfalse）を受け取り、! をつけて「逆」に
+    // ----------------------------------------------------
+    // アクション：チェックボックスを押した時の処理
+    // ----------------------------------------------------
+    // 現在の状態（trueかfalse）を受け取り、! をつけて「逆」に
     const handleToggle = async (id: number, currentStatus: boolean) => {
         const nextStatus = !currentStatus
 
@@ -48,22 +65,31 @@ export default function ShoppingList({ items }: Props) {
         await toggleShoppingItem(id, nextStatus)
     }
 
-    // ▼ 削除ボタンの処理
+    // ----------------------------------------------------
+    // アクション：削除ボタンを押した時の処理
+    // ----------------------------------------------------
     const handleDelete = async (id: number) => {
-        // 押されたID「以外」のデータを残す（filter）
-            const newItems = localItems.filter((item) => item.id !== id)
-            setLocalItems(newItems)
-            // その後にデータベースからも削除
-            await deleteShoppingItem(id)
+        // 押されたID「以外」のデータを残す（filter）ことで、画面から即座に消す
+        const newItems = localItems.filter((item) => item.id !== id)
+        setLocalItems(newItems)
+        
+        // その後にデータベースからも削除
+        await deleteShoppingItem(id)
     }
 
-    
+    // ----------------------------------------------------
+    // アクション：冷蔵庫への移行が完了した時の処理
+    // ----------------------------------------------------
     const handleTransferComplete = (id: number) => {
-        // 移行されたアイテム「以外」を残してメモ帳を上書きする
+        // 移行されたアイテム「以外」を残してメモ帳を上書きする（画面から即座に消える！）
         const newItems = localItems.filter((item) => item.id !== id)
         setLocalItems(newItems)
     }
 
+
+    // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+    // ④ 画面の表示（HTML / UI部分）
+    // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return (
         <div>
             <table>
@@ -83,7 +109,7 @@ export default function ShoppingList({ items }: Props) {
                             <td colSpan={5}>お買い物リストは空です</td>
                         </tr>
                     ) : (
-                        // メモ帳のデータを1件ずつ取り出し、表の行（<tr>）を作ります。Reactのルールで、行ごとに固有の目印（key）
+                        // メモ帳のデータを1件ずつ取り出し、表の行（<tr>）を作ります。Reactのルールで、行ごとに固有の目印（key）を設定します
                         localItems.map((item) => (
                             <tr key={item.id}>
                                 <td>
@@ -92,7 +118,7 @@ export default function ShoppingList({ items }: Props) {
                                         type="checkbox"
                                         checked={item.isPurchased}
                                         onChange={() => handleToggle(item.id, item.isPurchased)}
-                                        style={{marginRight: '8px', transform: 'scale(1.2'}}
+                                        style={{marginRight: '8px', transform: 'scale(1.2)'}}
                                     />
                                     {item.isPurchased ? "購入済み" : "未購入"}
                                 </label></td>
@@ -104,11 +130,13 @@ export default function ShoppingList({ items }: Props) {
                                         <button style={{marginRight: '8px'}}>編集</button>
                                     </Link>
                                     <button onClick={() => handleDelete(item.id)}>削除</button>
+                                    
+                                    {/* さっき作った移行ボタン部品をここで呼び出しています */}
                                     <TransferToFridgeButton 
-                                    shoppingId={item.id} 
-                                    isFood={item.category.isFood} 
-                                    isPurchased={item.isPurchased} 
-                                    onTransferComplete={() => handleTransferComplete(item.id)}
+                                        shoppingId={item.id} 
+                                        isFood={item.category.isFood} 
+                                        isPurchased={item.isPurchased} 
+                                        onTransferComplete={() => handleTransferComplete(item.id)}
                                     />
                                 </td>
                             </tr>
