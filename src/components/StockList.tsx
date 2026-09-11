@@ -167,7 +167,6 @@ export default function StockList({initialStocks}: Props){
                                     quantity={1} 
                                 />
                                 
-                                {/* いただいたTailwindクラスをそのまま使っています！ */}
                                 {/* px-2 py-1 (内側の余白) と rounded (角丸) を足すとさらにボタンらしくなりますよ */}
                                 <Link
                                     href={`/fridge/${stock.id}/edit`}

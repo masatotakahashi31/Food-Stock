@@ -10,15 +10,15 @@ import Link from 'next/link'
 export default async function NewStockPage() {
   const categories = await prisma.category.findMany()
   return (
-    <div>
-      <h2>在庫の登録</h2>
+    <div className="mt-10 mb-5">
+      <h2 className="ml-8 text-xl">在庫の登録</h2>
       {/* 切り出したフォーム部品に、 */}
         {/* 「カテゴリ一覧」と「新規追加用の関数(addStock)」を渡して表示 */}
-      <StockForm categories={categories} formAction={addStock} />
-      <div style={{marginTop: '20px'}}>
-                <Link href="/fridge">一覧に戻る</Link>
+      <div>
+      <StockForm
+      categories={categories} formAction={addStock} />
+      </div>
             </div>
-    </div>
     
   )
 }
