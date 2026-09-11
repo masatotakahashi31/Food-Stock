@@ -7,8 +7,8 @@ export default async function NewShoppingPage(){
     const categories = await prisma.category.findMany()
 
     return(
-        <div>
-            <h2>買うものを追加</h2>
+        <div className="mt-10 mb-5">
+            <h2 className="ml-8 text-xl">買うものを追加</h2>
 
             <ShoppingForm
                 categories={categories}

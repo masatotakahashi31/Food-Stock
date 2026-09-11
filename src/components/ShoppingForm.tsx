@@ -33,13 +33,18 @@ export default function ShoppingForm({categories, action, initialData}: Props) {
     // ③ 画面の表示（HTML / UI部分）
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return(
-        <form action={action}>
+        <form action={action} className="ml-2 w-[97%]">
             
             {/* カテゴリ入力欄を囲む箱 */}
-            <div>
-                <label>カテゴリ</label>
+            <div className="mt-5">
+                <label className="font-bold">カテゴリ:</label>
                 {/* 選択式（プルダウン）の入力部品です。編集時は initialData の値を初期値にセットします */}
-                <select name="categoryId" defaultValue={initialData?.categoryId} required >
+                <select 
+                    className="mb-3 p-2 w-full border rounded-md" 
+                    name="categoryId" 
+                    defaultValue={initialData?.categoryId || ""} 
+                    required 
+                >
                     {/* 未選択状態の項目。valueを空にすることで、これを選んだままでは送信できないようにします */}
                     <option value="">選択してください</option>
                     
@@ -54,20 +59,38 @@ export default function ShoppingForm({categories, action, initialData}: Props) {
 
             {/* 品名入力欄を囲む箱 */}
             <div>
-                <label>品名:</label>
+                <label className="font-bold">品名:</label>
                 {/* 文字入力欄です。編集時は元の品名を初期値にセットします */}
-                <input type="text" name="itemName" defaultValue={initialData?.itemName} required />
+                <input 
+                    className="mb-3 p-1 w-full border rounded-md" 
+                    type="text" 
+                    name="itemName" 
+                    defaultValue={initialData?.itemName || ""} 
+                    required 
+                />
             </div>
             
             {/* 数量入力欄を囲む箱 */}
             <div>
-                <label>数量:</label>
+                <label className="font-bold">数量:</label>
                 {/* 数字入力欄です。新規登録時は「1」を、編集時は元の数量を初期値にします */}
-                <input type="number" name="quantity" defaultValue={initialData?.quantity || 1} min='1' required />
+                <input 
+                    className="mb-3 p-1 w-full border rounded-md" 
+                    type="number" 
+                    name="quantity" 
+                    defaultValue={initialData?.quantity || 1} 
+                    min='1' 
+                    required 
+                />
             </div>
 
             {/* initialDataの有無（編集か新規追加か）で、ボタンの文字を自動で切り替えます */}
-            <button type="submit">{initialData ? "更新する" : "追加する"}</button>
+            <button 
+                className="mb-3 w-full p-1 text-5xl bg-green-400 font-bold border rounded-md mt-10" 
+                type="submit"
+            >
+                {initialData ? "更新する" : "追加する"}
+            </button>
 
         </form>
     )
