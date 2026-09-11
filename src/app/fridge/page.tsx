@@ -24,8 +24,12 @@ export default async function FridgePage(){
 
   return(
     <div>
-      <h2>冷蔵庫の在庫一覧</h2>
-      <Link href="/fridge/new">新しい食材を登録</Link>
+      <div className="flex mt-10 mb-5 justify-between">
+      <h2 className="ml-8 text-xl">在庫一覧画面</h2>
+      <Link 
+      className="px-8 mr-8 bg-green-300 hover:bg-green-500 rounded-md transition-colors"
+      href="/fridge/new">新しい食材を登録</Link>
+      </div>
       <StockList initialStocks={stocks} />
     </div>
   )

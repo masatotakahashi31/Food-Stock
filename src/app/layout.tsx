@@ -23,7 +23,9 @@ export default function RootLayout({
     <html lang='ja'>
       <body>
         <header>
-          <h1>冷蔵庫・買い物リスト一元管理アプリ</h1>
+          <h1
+          className="text-center mt-5 text-3xl border-b"
+          >食材管理🍗</h1>
         </header>
         <main>
           {/* 各ページのコンテンツ（page.tsxの中身）がここに挿入されます。 */}
@@ -32,15 +34,19 @@ export default function RootLayout({
         {/* ナビゲーション（メニュー）の領域を定義 */}
         <nav>
           {/* 順序のないリストを作成 */}
-          <ul>
+          <ul className="flex gap-3">
             {/* リストの項目を作成 */}
-            <li>
+            <li className="bg-gray-300 w-full py-2 mt-3 text-center rounded-md border hover:bg-gray-400 transition-colors">
               {/* 冷蔵庫一覧画面（/fridge）へのリンクを作成 */}
-              <Link href="/fridge">冷蔵庫</Link>
+              <Link 
+              className="block"
+              href="/fridge">在庫画面</Link>
             </li>
-            <li>
+            <li className="bg-gray-300 w-full py-2 mt-3 text-center rounded-md border  hover:bg-gray-400 transition-colors">
               {/* お買い物一覧画面（/shopping）へのリンクを作成 */}
-              <Link href="/shopping">お買い物リスト</Link>
+              <Link 
+              className="block"
+              href="/shopping">お買い物リスト</Link>
             </li>
           </ul>
         </nav>

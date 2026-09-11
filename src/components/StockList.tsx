@@ -7,6 +7,7 @@ import {useState} from 'react'
 import {deleteStockById} from '@/app/fridge/actions'
 import Link from 'next/link'
 import QuickAddButton from './QuickAddButton'
+import '@/app/globals.css';
 
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -108,65 +109,84 @@ export default function StockList({initialStocks}: Props){
     // ④ 画面の表示（HTML / UI部分）
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return(
-        <ul>
-            {/* 取得した stocks のデータを1件ずつ取り出してループ処理 */}
-            {stocks.map((stock) => (
-                // リストの1項目(被らない一意のキー)
-                <li key={stock.id}
-                    // スプレッド構文） が超重要です！これは「関数から返ってきた箱（オブジェクト）の中身を展開して、ここに並べる
-                    style={{ marginBottom: '15px', ...getHighlightStyle(stock.expirationDate)}}
-                >
-                    {/* 在庫の数量に加え、food を経由してたどり着いた食材名とcategoryのカテゴリ名をそれぞれ表示します。 */}
-                    {/* strongは太字 */}
-                    <strong>食材: {stock.food.foodName}</strong>/ カテゴリー: {stock.food.category.categoryName}/ 数量: {stock.stockQuantity}
-                    
-                    {/* 消費期限のデータが存在する場合のみ表示する条件分岐 */}
-                    {stock.expirationDate && (
-                        // 消費期限を日本の日付形式にフォーマットして表示
-                        // 左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-                        // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-                        <span> / 期限: {stock.expirationDate.toLocaleDateString('ja-JP')}</span>
-                    )}
-                    
-                    {/* memoのデータが存在する場合のみ表示する条件分岐 */}
-                    {stock.memo && (
-                        // &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-                        // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-                        <span> / メモ: {stock.memo}</span>
-                    )}
-                    
-                    {stock.purchaseDate && (
-                        // &&の左側がデータあり（True）の場合: 右側の (<span>...</span>) に進んで、中の文字をすべて画面に表示します。
-                        // &&の左側がデータなし（null や false）の場合: その時点で処理を打ち切り、右側の (<span>...</span>) をタグごと読み込みません。
-                        <span> / 購入日: {stock.purchaseDate.toLocaleDateString('ja-JP')}</span>
-                    )}
-                    
-                    <span style={{ marginLeft: '15px' }}>
-                        {/* ★ ワンタップ追加ボタン */}
-                        {/* QuickAddButton という部品（コンポーネント）をここに呼び出して配置 */}
-                        <QuickAddButton 
-                            // 食材のカテゴリIDはこれだよ」とデータを渡して
-                            categoryId={stock.food.category.id} 
-                            // この食材の名前（例：にんじん）はこれだよ」とデータを渡しています
-                            itemName={stock.food.foodName} 
-                            // 買い物リストには『1個』追加してね」とデータを渡しています
-                            quantity={1} 
-                        />
-                        <Link
-                            href={`/fridge/${stock.id}/edit`}
-                            style={{color: 'blue', marginLeft: '10px'}}
-                        >
-                            編集
-                        </Link>
-                        <button
-                            onClick={() => handleDelete(stock.id)}
-                            style={{color:'red',marginLeft:'10px'}}
-                        >
-                            削除
-                        </button>
-                    </span>
-                </li>
-            ))}
-        </ul>
+        // ★ここがポイント1： <ul> をやめて <table> で全体を囲みます。
+        // className="w-full" で、画面の横幅いっぱいに表を広げます。
+        <table className="w-full text-left">
+            
+            {/* ★ここがポイント2： 表の見出し（ヘッダー）を先に作ります */}
+            <thead>
+                <tr className="border-b"> 
+                    <th className="p-2 w-4/12">食材</th>
+                    <th className="p-2 w-2/12">カテゴリー</th>
+                    <th className="p-2 w-1/12">数量</th>
+                    <th className="p-2 w-4/12">期限 / 購入日 / メモ</th>
+                    <th className="p-2 w-1/12">操作</th>
+                </tr>
+            </thead>
+
+            {/*  ここからデータの出力（tbody）を始めます */}
+            <tbody
+>
+                {stocks.map((stock) => (
+                    //<tr> (テーブルの行) 
+                    <tr 
+                        key={stock.id}
+                        // ハイライト機能は、行全体に当てはめ
+                        style={getHighlightStyle(stock.expirationDate)}
+                        className="border-b"
+                    >
+                        {/* 1マス目：食材名 */}
+                        <td className="p-4 font-bold">{stock.food.foodName}</td>
+                        
+                        {/* 2マス目：カテゴリー */}
+                        <td className="p-4">{stock.food.category.categoryName}</td>
+                        
+                        {/* 3マス目：数量 */}
+                        <td className="p-4">{stock.stockQuantity}</td>
+                        
+                        {/* 4マス目：期限やメモなどの細かい情報 */}
+                        <td className="p-4 text-sm text-gray-600">
+                            {stock.expirationDate && (
+                                <span>期限: {stock.expirationDate.toLocaleDateString('ja-JP')} </span>
+                            )}
+                            {stock.purchaseDate && (
+                                <span> / 購入: {stock.purchaseDate.toLocaleDateString('ja-JP')} </span>
+                            )}
+                            {stock.memo && (
+                                <span> / {stock.memo}</span>
+                            )}
+                        </td>
+                        
+                        {/* 5マス目：操作ボタンたち */}
+                        <td className="p-2">
+                            {/* flex を使うと、ボタンが横に綺麗に並びます */}
+                            <div className="flex gap-2 items-center">
+                                <QuickAddButton 
+                                    categoryId={stock.food.category.id} 
+                                    itemName={stock.food.foodName} 
+                                    quantity={1} 
+                                />
+                                
+                                {/* いただいたTailwindクラスをそのまま使っています！ */}
+                                {/* px-2 py-1 (内側の余白) と rounded (角丸) を足すとさらにボタンらしくなりますよ */}
+                                <Link
+                                    href={`/fridge/${stock.id}/edit`}
+                                    className="text-blue-500 bg-blue-200 hover:underline w-15 text-center py-2 rounded"
+                                >
+                                    編集
+                                </Link>
+                                
+                                <button
+                                    onClick={() => handleDelete(stock.id)}
+                                    className="text-red-500 bg-red-200 hover:underline w-15 text-center py-2 rounded"
+                                >
+                                    削除
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
     )
 }

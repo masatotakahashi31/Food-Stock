@@ -43,9 +43,10 @@ export default function QuickAddButton({ categoryId, itemName, quantity = 1 }: P
     return (
         <button 
             type="button"
+            className="bg-gray-100 hover:bg-gray-300 rounded-full transition-colors"
             onClick={handleQuickAdd}
         >
-            + 買い物リストへ登録
+            +🛒
         </button>
     )
 }
