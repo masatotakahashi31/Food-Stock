@@ -109,8 +109,7 @@ export default function StockList({initialStocks}: Props){
     // ④ 画面の表示（HTML / UI部分）
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return(
-        // ★ここがポイント1： <ul> をやめて <table> で全体を囲みます。
-        // className="w-full" で、画面の横幅いっぱいに表を広げます。
+        // className="w-full" で、画面の横幅いっぱい
         <table className="w-full text-left">
             
             {/* ★ここがポイント2： 表の見出し（ヘッダー）を先に作ります */}

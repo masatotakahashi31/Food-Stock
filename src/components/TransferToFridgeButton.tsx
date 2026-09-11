@@ -50,20 +50,13 @@ export default function TransferToFridgeButton({ shoppingId, isFood, isPurchased
             type="button"
             onClick={handleTransfer}
             disabled={isDisabled} // ★ ここでHTMLの機能を使ってボタンを完全に無効化します
-            style={{
-                padding: '4px 8px',
-                // ★ 押せない時はグレー、押せる時は緑色（エメラルドグリーン）に変化させます
-                backgroundColor: isDisabled ? '#d1d5db' : '#10b981', 
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                // ★ 押せない時はマウスカーソルの形を「禁止マーク（not-allowed）」に変えます
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                fontSize: '12px',
-                marginLeft: '10px'
-            }}
+            className={`p-2 not-first:w-25 text-center rounded ${
+                isDisabled 
+                    ? 'text-gray-100 bg-gray-200 cursor-not-allowed' // true（押せない時
+                    : ' bg-green-200 hover:underline'      // false（押せる時）
+            }`}
         >
-            冷蔵庫へ移行
+            移行
         </button>
     )
 }

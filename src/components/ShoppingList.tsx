@@ -92,14 +92,14 @@ export default function ShoppingList({ items }: Props) {
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return (
         <div>
-            <table>
+            <table className="w-full text-left">
                 <thead>
-                    <tr>
-                        <th>状態</th>
-                        <th>カテゴリ</th>
-                        <th>品名</th>
-                        <th>数量</th>
-                        <th>操作</th>
+                    <tr className="border-b">
+                        <th className="p-2 w-4/12">品名</th>
+                        <th className="p-2 w-2/12">カテゴリー</th>
+                        <th className="p-2 w-1/12">数量</th>
+                        <th className="p-2 w-3/12">状態</th>
+                        <th className="p-2 w-2/12">操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,25 +111,34 @@ export default function ShoppingList({ items }: Props) {
                     ) : (
                         // メモ帳のデータを1件ずつ取り出し、表の行（<tr>）を作ります。Reactのルールで、行ごとに固有の目印（key）を設定します
                         localItems.map((item) => (
-                            <tr key={item.id}>
-                                <td>
+                            <tr key={item.id} className="border-b">
+                                <td className="p-4 font-bold">{item.itemName}</td>
+                                <td className="p-4">{item.category.categoryName}</td>
+                                <td className="p-4">{item.quantity}</td>
+                                <td className="p-4">
                                 <label style={{cursor: 'pointer' }}>
                                     <input
                                         type="checkbox"
                                         checked={item.isPurchased}
                                         onChange={() => handleToggle(item.id, item.isPurchased)}
-                                        style={{marginRight: '8px', transform: 'scale(1.2)'}}
                                     />
                                     {item.isPurchased ? "購入済み" : "未購入"}
                                 </label></td>
-                                <td>{item.category.categoryName}</td>
-                                <td>{item.itemName}</td>
-                                <td>{item.quantity}</td>
-                                <td>
-                                    <Link href={`/shopping/${item.id}/edit`}>
-                                        <button style={{marginRight: '8px'}}>編集</button>
+                                
+                                <td className="p-2">
+                                    <div className="flex gap-2 items-center">
+                                    <Link  
+                                        href={`/shopping/${item.id}/edit`}
+                                        className="text-blue-500 bg-blue-200 hover:underline w-15 text-center py-2 rounded"
+                                    >
+                                        編集
                                     </Link>
-                                    <button onClick={() => handleDelete(item.id)}>削除</button>
+                                    <button 
+                                        className="text-red-500 bg-red-200 hover:underline w-15 text-center py-2 rounded" 
+                                        onClick={() => handleDelete(item.id)}
+                                    >
+                                        削除
+                                    </button>
                                     
                                     {/* さっき作った移行ボタン部品をここで呼び出しています */}
                                     <TransferToFridgeButton 
@@ -138,6 +147,7 @@ export default function ShoppingList({ items }: Props) {
                                         isPurchased={item.isPurchased} 
                                         onTransferComplete={() => handleTransferComplete(item.id)}
                                     />
+                                    </div>
                                 </td>
                             </tr>
                         ))

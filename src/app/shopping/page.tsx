@@ -15,21 +15,17 @@ export default async function ShoppingPage() {
 
     return (
         <div>
-            <h2>お買い物リスト</h2>
-
-            <div>
-                <Link href="/shopping/new">
-                    + 買うものを追加する
+            <div className="flex mt-10 mb-5 justify-between">
+                <h2 className="ml-8 text-xl">お買い物リスト</h2>
+                <Link 
+                    className="px-8 mr-8 bg-green-300 hover:bg-green-500 rounded-md transition-colors" 
+                    href="/shopping/new"
+                >
+                    + 買うものを追加
                 </Link>
             </div>
             
             <ShoppingList items={shoppingItems} />
-
-            <div>
-                <Link href="/fridge">
-                    ←冷蔵庫一覧に戻る
-                </Link>
-            </div>
         </div>
     )
 }
