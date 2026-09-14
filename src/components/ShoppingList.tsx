@@ -11,6 +11,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 // さっき作った「冷蔵庫へ移行」ボタンの部品
 import TransferToFridgeButton from './TransferToFridgeButton'
+import '@/app/globals.css';
 
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝

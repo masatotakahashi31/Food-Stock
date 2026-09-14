@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { editShoppingItem } from '@/app/shopping/actions'
 import Link from 'next/link'
 import ShoppingForm from '@/components/ShoppingForm'
+import '@/app/globals.css';
 
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝

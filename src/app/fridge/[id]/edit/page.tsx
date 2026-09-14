@@ -9,6 +9,7 @@ import {updateStock} from '@/app/fridge/actions'
 import StockForm from '@/components/StockForm'
 // 画面を切り替える（遷移する）ためのNext.js専用リンク機能を読み込み
 import Link from 'next/link'
+import '@/app/globals.css';
 
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝

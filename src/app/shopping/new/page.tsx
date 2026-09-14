@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {prisma} from '@/lib/prisma'
 import {addShoppingItem} from '../actions'
 import ShoppingForm from '@/components/ShoppingForm'
+import '@/app/globals.css';
 
 export default async function NewShoppingPage(){
     const categories = await prisma.category.findMany()

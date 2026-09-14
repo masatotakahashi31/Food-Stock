@@ -3,6 +3,7 @@ import StockList from '@/components/StockList'
 import {prisma} from '@/lib/prisma'
 //ページ遷移用のLinkコンポーネントを読み込み
 import Link from 'next/link'
+import '@/app/globals.css';
 
 //在庫一覧画面を表示する関数を定義
 export default async function FridgePage(){

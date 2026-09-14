@@ -153,7 +153,8 @@ export default function StockList({initialStocks}: Props){
                         {/* 4マス目：期限やメモなどの細かい情報 */}
                         <td className="p-4 text-sm text-gray-600">
                             {stock.expirationDate && (
-                                <span>期限: {stock.expirationDate.toLocaleDateString('ja-JP')} </span>
+                                <span style={getHighlightStyle(stock.expirationDate)}>
+                                  期限: {stock.expirationDate.toLocaleDateString('ja-JP')} </span>
                             )}
                             {stock.purchaseDate && (
                                 <span> / 購入: {stock.purchaseDate.toLocaleDateString('ja-JP')} </span>
