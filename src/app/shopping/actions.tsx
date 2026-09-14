@@ -40,6 +40,7 @@ export async function addShoppingItem(formData: FormData) {
     const quantity = Number(formData.get('quantity'))
 
     // データベースから、未購入（isPurchased: false）かつ「入力された品名」と完全に一致するデータを探します
+    // データベースの中に条件に合うデータが複数あっても、上から順番に見て最初に見つかった1件だけを取得
     const existingItem = await prisma.shopping.findFirst({
         where: {
             itemName: itemName,
@@ -152,7 +153,7 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
 }
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-// ⑥ 一括移行機能（お買い物リストから冷蔵庫へ）
+// ⑥ 移行機能（お買い物リストから冷蔵庫へ）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ★ 購入済みアイテムを冷蔵庫（在庫）へ移行する関数
 export async function transferToFridge(shoppingId: number) {
@@ -162,8 +163,9 @@ export async function transferToFridge(shoppingId: number) {
         include: { category: true } // ★リレーション先のカテゴリ情報も引き出す
     })
 
-    // 安全装置（エラーチェック）
+    // 安全装置（エラーチェック）そもそもそのIDのお買い物データが存在するか確認します。なければエラーで止め
     if (!item) throw new Error("データが見つかりません")
+        // そのアイテムが「購入済み（isPurchased が true）」になっているか確認します。まだ買ってないならエラー
     if (!item.isPurchased) throw new Error("まだ購入されていません")
     
     // ★ 要件クリア：非食品（isFood = false）はバックエンドでもしっかり弾く！
@@ -171,24 +173,18 @@ export async function transferToFridge(shoppingId: number) {
         throw new Error("食品ではないため冷蔵庫に移行できません")
     }
 
-    // 2. 食材マスタ（Food）を検索 or 新規作成（Find or Create）
-    // まずは同じ名前・同じカテゴリの食材マスタがすでに存在するか探す
-    let food = await prisma.food.findFirst({
-        where: {
+    // 食材マスタ（Food）の検索 or 新規作成（upsert）
+    // お買い物リストにある食材名（item.itemName）が、すでにデータベースの「食品マスタ」に登録されているか
+    const food = await prisma.food.upsert({
+        where: { foodName: item.itemName },
+        // あったら：カテゴリIDを最新のものに上書き更新
+        update: { categoryId: item.categoryId }, // すでにあったらカテゴリを最新に更新
+        // なかったら：その名前とカテゴリで新しく食品マスタを作成
+        create: {
             foodName: item.itemName,
             categoryId: item.categoryId,
         }
     })
-
-    // マスタに無ければ、裏側でこっそり自動作成する
-    if (!food) {
-        food = await prisma.food.create({
-            data: {
-                foodName: item.itemName,
-                categoryId: item.categoryId,
-            }
-        })
-    }
 
     // 3. 取得（または作成）した食材マスタのIDを使って、在庫（Stock）に登録
     await prisma.stock.create({
@@ -208,20 +204,3 @@ export async function transferToFridge(shoppingId: number) {
     revalidatePath('/shopping')
     revalidatePath('/fridge')
 }
-
-// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-// ⑦ 学習メモ
-// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
-// constで良い理由
-// 新規のお買い物だった場合（else の中）
-// ビフォー： existingItem ＝ 空っぽ（null）
-// 処理： データベースに新しく「牛乳」を登録（create）します。データベースの中には新しいID付きで牛乳が保存されます。
-// アフター： existingItem ＝ 空っぽ（null）のまま！（箱の中身は詰め直していません）
-// 登録処理が終わった次の行は、redirect('/shopping') （一覧画面へ戻る） だからです。
-// 「新しく発行された牛乳のID」を使う用事がもう一切ないので、わざわざ箱に最新のデータを詰め直す必要がなく、空っぽのまま放置して画面を移動してOKなのです。
-
-// 探す: リストの中に、まだ買っていない同じ名前の品物があるか探す。
-
-// あった場合: 新しく行を追加するのではなく、すでにあるデータの「数量」を足し算して合体させます。（例：すでに「にんじん1本」と書いてあるメモに、さらに2本追加されたら「にんじん3本」に書き換える）
-
-// なかった場合: 新しい品物として、リストに新規登録します。
