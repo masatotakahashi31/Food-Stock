@@ -25,7 +25,7 @@ model Category {
 
 model Food {
   id         Int      @id @default(autoincrement())
-  foodName   String   @map("food_name") @db.VarChar(100)
+  foodName   String   @unique　@map("food_name") @db.VarChar(100)
   categoryId Int      @map("category_id")
   category   Category @relation(fields: [categoryId], references: [id])
   stocks     Stock[]
