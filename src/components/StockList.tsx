@@ -62,7 +62,9 @@ export default function StockList({initialStocks}: Props){
 
         // 現在の「日付と時間（例：2026年9月10日 15:33）」を取得
         const today = new Date()
-        // 時間を「0時0分0秒0ミリ秒」にリセットします。これをしないと、「今日の夕方」と「今日の朝」の比較でズレが生じてしまうため、純粋に「日付」で判定
+        // その日の真夜中のスタート時点にリセット
+        // setHours：「日付データの『時間（時・分・秒・ミリ秒）』を後から強制的に書き換える（セットする）」ための命令
+        // 「時間は一切気にせず、純粋に『カレンダーの日付』だけで比較したいから、時間をすべて『0時0分0秒』に強制リセットして！」という命令
         today.setHours(0, 0, 0, 0)
 
         // 食材の「消費期限」も日付データに変換し、時間を「0時0分0秒0ミリ秒」にリセット
@@ -71,9 +73,10 @@ export default function StockList({initialStocks}: Props){
 
         // 日数の差を計算
         // .getTime() を使うと、日付を「1970年から何ミリ秒経ったか」というとんでもなく大きな数字に変換できます。その数字同士を引き算して、「2つの日付の差（ミリ秒）」を出します
+        // コンピュータの世界で時間を数字で扱うための共通の「スタート地点（基準日）」が、1970年1月1日（協定世界時）
         const diffTime = expDate.getTime() - today.getTime()
         // さっき計算したミリ秒を、「日数」に直します。
-        // （1000ミリ秒 × 60秒 × 60分 × 24時間 ＝ 1日）。Math.ceil は端数が出た時のための切り上げ処理
+        // （1000ミリ秒 × 60秒 × 60分 × 24時間 ＝ 「1日分のミリ秒」）。Math.ceil は端数が出た時のための切り上げ処理
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
         // ▼ 日数によって色を変える
@@ -114,7 +117,7 @@ export default function StockList({initialStocks}: Props){
             
             {/* ★ここがポイント2： 表の見出し（ヘッダー）を先に作ります */}
             <thead>
-                <tr className="border-b"> 
+                <tr className="border-b bg-gray-400"> 
                     <th className="p-2 w-4/12">食材</th>
                     <th className="p-2 w-2/12">カテゴリー</th>
                     <th className="p-2 w-1/12">数量</th>
@@ -134,9 +137,13 @@ export default function StockList({initialStocks}: Props){
                         style={getHighlightStyle(stock.expirationDate)}
                         className="border-b"
                     >
-                        {/* 1マス目：食材名 */}
-                        <td className="p-4 font-bold">{stock.food.foodName}</td>
-                        
+                        {/* 1マス目：食材名、、消費期限未入力の場合、⚠️ */}
+                        <td className="p-4 font-bold">
+                          <div className="text-xs text-gray-400">
+                          {!stock.expirationDate && <span>⚠️消費期限未入力</span>}
+                          </div>
+                          {stock.food.foodName}
+                        </td>
                         {/* 2マス目：カテゴリー */}
                         <td className="p-4">{stock.food.category.categoryName}</td>
                         

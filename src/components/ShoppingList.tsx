@@ -59,6 +59,7 @@ export default function ShoppingList({ items }: Props) {
                 return item
             }
         })
+        // Reactの状態（State）を更新し、画面のチェック状態を即座に再描画する（楽観的UI更新
         setLocalItems(newItems)
 
         // （サーバー）に通信して、実際のデータベースも同じ状態に書き換え
@@ -94,7 +95,7 @@ export default function ShoppingList({ items }: Props) {
         <div>
             <table className="w-full text-left">
                 <thead>
-                    <tr className="border-b">
+                    <tr className="border-b bg-gray-400">
                         <th className="p-2 w-4/12">品名</th>
                         <th className="p-2 w-2/12">カテゴリー</th>
                         <th className="p-2 w-1/12">数量</th>
@@ -145,6 +146,7 @@ export default function ShoppingList({ items }: Props) {
                                         shoppingId={item.id} 
                                         isFood={item.category.isFood} 
                                         isPurchased={item.isPurchased} 
+                                        // 移行が成功した後に親のリストから消すためのコールバック（onTransferComplete）を設定
                                         onTransferComplete={() => handleTransferComplete(item.id)}
                                     />
                                     </div>
