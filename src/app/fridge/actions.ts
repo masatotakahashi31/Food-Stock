@@ -1,7 +1,6 @@
 // ファイル内に書かれた関数が「サーバー側（裏側）でのみ実行される」ことをNext.jsに宣言
 "use server"
 
-import { prismaVersion } from '@/generated/prisma/internal/prismaNamespace'
 // データベースを操作するためのPrismaクライアントを読み込み
 import {prisma} from '@/lib/prisma'
 //処理が終わった後に別の画面へ強制的に移動させるための関数を読み込み
@@ -19,39 +18,18 @@ export async function addStock(formData: FormData){
     // 食材名を文字列として取得
     const foodName = formData.get('foodName') as string
 
-    // 食品マスタ）テーブルの中から、条件に合う最初の1件を探して変数 food に入れます。後で中身を書き換える可能性があるため、const ではなく let で宣言
-    let food = await prisma.food.findFirst({
-        // 探す条件として「入力された食材名と完全に一致するデータ」を指定
-        where: {foodName: foodName}
-    })
-
-    // もし該当する食品データが見つかった（既に登録されていた）場合の分岐
-    if (food){
-        // 見つかった食品に紐付いているカテゴリIDと、今回画面で選択されたカテゴリIDが一致しない（別のカテゴリが選ばれた）場合の分岐
-        if (food.categoryId !== categoryId){
-            // Prismaの update 機能を使ってデータを上書きし、その結果で変数 food を書き換え
-            food = await prisma.food.update({
-                // 上書きする対象として、見つかった食品データのIDを指定
-                where: {id: food.id},
-                // 変更する内容として、カテゴリIDを「今回新しく画面で選ばれたカテゴリID」に書き換え
-                data: {categoryId: categoryId},
-            })
-        // カテゴリ不一致の分岐を閉じます。（カテゴリが一致した場合は何もせず、見つかった food のデータをそのまま使い回します
+    // ===== 新しい食材名で upsert（あれば更新、なければ作成）を実行する処理 =====
+    const food = await prisma.food.upsert({
+        // 探すための目印（条件）：入力された食材名（foodName）が、すでにデータベースに登録されているか探します
+        where: {foodName: foodName},
+        // もし既に見つかった場合】：そのデータのカテゴリIDを、今回選ばれた新しいカテゴリIDに上書き更新
+        update: {categoryId: categoryId},
+        // 【もし見つからなかった場合（新規の食材だった場合）】：入力された食材名とカテゴリIDをセットにして、新しくデータベースに登録
+        create: {
+            foodName: foodName,
+            categoryId: categoryId,
         }
-    // もし該当する食品データが見つからなかった（新規の食材だった）場合の分岐
-    } else {
-        // 新しい食品データを food テーブルに登録し、その結果を変数 food に上書き
-        food = await prisma.food.create({
-            // 入力された食材名と選択されたカテゴリIDを登録データとして指定
-            data: {
-                foodName: foodName,
-                categoryId: categoryId,
-            }
-        // 登録処理を終了
-        })
-    // 見つからなかった場合の分岐を閉じ
-    }
-
+    })
 
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     // ② 在庫（Stock）に関するデータの準備・登録
@@ -189,19 +167,3 @@ export async function updateStock(formData: FormData){
 
     redirect('/fridge')
 }
-
-//letを使用している理由
-// 新規の食材だった場合（else の中）
-// ビフォー： food ＝ 空っぽ（null）
-
-// 処理： データベースに新しい食材を登録（create）します。すると、データベースが「IDの10番で登録しておいたよ！」と新しいデータを返してくれます。
-
-// アフター： food ＝ { id: 10, foodName: "玉ねぎ", categoryId: 3 }
-
-// 探す（前準備）: 入力された名前が、「Food（食品マスター）」に登録されているか探す。
-
-// あった場合: カテゴリが間違っていれば修正する。
-
-// なかった場合: 今後使い回せるように、新しい食材として「Food（食品マスター）」に新規登録する。
-
-// 本命の処理: 準備が整った「FoodのID（辞書の番号）」を使って、すでにある「Stock（在庫）」のデータを上書き更新（賞味期限や数量などを変更）します。
