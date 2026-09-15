@@ -58,7 +58,7 @@ export default function StockList({initialStocks}: Props){
     // 消費期限（expirationDate）」を受け取って、それに合わせた「色の設定（スタイル）」を返す関数
     const getHighlightStyle = (expirationDate: Date | null) => {
         // 消費期限が登録されていなければ（null)なら、何も色をつけない
-        if (!expirationDate) return 
+        if (!expirationDate) return "px-1.5 py-0.5 border"
 
         // 現在の「日付と時間（例：2026年9月10日 15:33）」を取得
         const today = new Date()
@@ -90,7 +90,7 @@ export default function StockList({initialStocks}: Props){
         }
 
         // 上のどちらにも当てはまらない（期限まで3日以上ある）場合は、色を変えない
-        return
+        return "px-1.5 py-0.5 border rounded"
     }
 
     // ----------------------------------------------------
