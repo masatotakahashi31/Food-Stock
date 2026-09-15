@@ -43,6 +43,11 @@ export async function addStock(formData: FormData){
     // 「もし入力されていれば、文字列を日付データ（Date）に変換する。もし空っぽなら null にする」という条件分岐を行い、結果を変数に保存
     const expirationDate = expirationDateString ? new Date(expirationDateString) : null
 
+        // フォームから入力された「購入日時(purchaseDate)」を文字列として取り出し、変数 purchaseDateString に入れ
+    const purchaseDateString = formData.get('purchaseDate') as string
+    // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら現在の日時（今日・今の時間）が自動的に
+    const purchaseDate = purchaseDateString ? new Date(purchaseDateString): new Date()
+
     // StockForm.tsx）の <input name="memo" /> で入力された文字を引っ張ってきています
     const memoString = formData.get('memo') as string
     // 「条件演算子（三項演算子）」という書き方
@@ -60,7 +65,7 @@ export async function addStock(formData: FormData){
             foodId: food.id,
             // 数量と現在の日時を指定
             stockQuantity: quantity,
-            purchaseDate: new Date(),
+            purchaseDate,
             // 日付が入力されていればその日付が、未入力なら null（空っぽ）がデータベースに保存
             expirationDate: expirationDate,
             memo: memo,
@@ -110,6 +115,11 @@ export async function updateStock(formData: FormData){
     // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら null にして変数 expirationDate に入れ
     const expirationDate = expirationDateString ? new Date(expirationDateString): null
 
+    // フォームから入力された「購入日時(purchaseDate)」を文字列として取り出し、変数 purchaseDateString に入れ
+    const purchaseDateString = formData.get('purchaseDate') as string
+    // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら現在の日時（今日・今の時間）が自動的に
+    const purchaseDate = purchaseDateString ? new Date(purchaseDateString): new Date()
+
     // フォームから選択された「カテゴリのID(categoryId)」を取り出し、数値に変換して変数 categoryId に入れ
     const categoryId = Number(formData.get('categoryId'))
     // フォームから入力された「食材名(foodName)」を文字列として取り出し、変数 foodName に入れ
@@ -146,6 +156,8 @@ export async function updateStock(formData: FormData){
             stockQuantity,
             // 「消費期限」を上書き
             expirationDate,
+
+            purchaseDate,
             // 「メモ」を上書き
             memo,
         }

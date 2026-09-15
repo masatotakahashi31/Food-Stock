@@ -15,6 +15,7 @@ type InitialData = {
     foodName: string
     quantity: number
     expirationDate: string
+    purchaseDate: string
     memo: string
 }
 
@@ -93,6 +94,12 @@ export default function StockForm({ categories, formAction, initialData }: Props
           <label className="font-bold">メモ欄（任意）:</label>
           {/* メモ欄入力（任意） */}
           <input className="mb-3 w-full p-1 border rounded-md" type="text" name="memo" defaultValue={initialData?.memo || ""} />
+        </div>
+
+        <div>
+          <label className="font-bold">購入日（任意：未入力の場合デフォルトで登録日時が入ります）:</label>
+          {/* メモ欄入力（任意） */}
+          <input className="mb-3 w-full p-1 border rounded-md" type="date" name="purchaseDate" defaultValue={initialData?.purchaseDate || ""} />
         </div>
 
         {/* initialDataの有無で、ボタンの文字を「更新」か「保存」に自動で切り替えます */}

@@ -63,6 +63,11 @@ export default async function EditStockPage({params}: Props){
         // もし消費期限が未入力（null）だったら、空文字（''）
         : ''
 
+    // データベースから取ってきた購入日時（Date型）を、画面のカレンダー入力欄で使える形に直す処理
+const formattedPurchaseDate = stock.purchaseDate
+    ? stock.purchaseDate.toISOString().split('T')[0]
+    : ''
+
     // フォームの「カテゴリ選択プルダウン」を作るために、データベースから全カテゴリのデータを取得
     const categories = await prisma.category.findMany()
 
@@ -78,6 +83,8 @@ export default async function EditStockPage({params}: Props){
         quantity: stock.stockQuantity,
         // 「YYYY-MM-DD」の形に整えた消費期限
         expirationDate: formattedExpirationDate,
+
+        purchaseDate: formattedPurchaseDate,
         // メモ（もしnullなら空文字にする || "" をつけています）
         memo: stock.memo || ""
     }
