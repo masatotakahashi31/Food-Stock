@@ -97,7 +97,7 @@ export default function StockForm({ categories, formAction, initialData }: Props
         </div>
 
         <div>
-          <label className="font-bold">購入日（任意：未入力の場合デフォルトで登録日時が入ります）:</label>
+          <label><span className="font-bold">購入日:</span>（任意：未入力の場合デフォルトで登録日時が入ります）</label>
           {/* メモ欄入力（任意） */}
           <input className="mb-3 w-full p-1 border rounded-md" type="date" name="purchaseDate" defaultValue={initialData?.purchaseDate || ""} />
         </div>
