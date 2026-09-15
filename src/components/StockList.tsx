@@ -58,7 +58,7 @@ export default function StockList({initialStocks}: Props){
     // 消費期限（expirationDate）」を受け取って、それに合わせた「色の設定（スタイル）」を返す関数
     const getHighlightStyle = (expirationDate: Date | null) => {
         // 消費期限が登録されていなければ（null)なら、何も色をつけない
-        if (!expirationDate) return {}
+        if (!expirationDate) return 
 
         // 現在の「日付と時間（例：2026年9月10日 15:33）」を取得
         const today = new Date()
@@ -83,10 +83,10 @@ export default function StockList({initialStocks}: Props){
         // もし計算した日数が0より小さければ（マイナスなら）、すでに期限を過ぎているので、背景を薄い赤、文字を
         if (diffDays < 0) {
             // すでに期限切れ：薄い赤色の背景と、濃い赤の文字
-            return { backgroundColor: '#ffe4e6', color: '#e11d48', padding: '10px', borderRadius: '5px' }
+            return "bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded border"
         // 2日以内：薄い黄色の背景と、濃いオレンジの文字
         } else if (diffDays <= 2) {
-            return { backgroundColor: '#fef3c7', color: '#d97706', padding: '10px', borderRadius: '5px' }
+            return "bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded border"
         }
 
         // 上のどちらにも当てはまらない（期限まで3日以上ある）場合は、色を変えない
@@ -134,8 +134,7 @@ export default function StockList({initialStocks}: Props){
                     <tr 
                         key={stock.id}
                         // ハイライト機能は、行全体に当てはめ
-                        style={getHighlightStyle(stock.expirationDate)}
-                        className="border-b"
+                        className={getHighlightStyle(stock.expirationDate)}
                     >
                         {/* 1マス目：食材名、、消費期限未入力の場合、⚠️ */}
                         <td className="p-4 font-bold">
@@ -154,7 +153,7 @@ export default function StockList({initialStocks}: Props){
                         <td className="p-4 text-sm text-gray-600">
                           <div className="flex flex-col">
                             {stock.expirationDate && (
-                                <span style={getHighlightStyle(stock.expirationDate)}>
+                                <span className={getHighlightStyle(stock.expirationDate)}>
                                   期限: {stock.expirationDate.toLocaleDateString('ja-JP')} </span>
                             )}
                             {stock.purchaseDate && (
@@ -179,14 +178,14 @@ export default function StockList({initialStocks}: Props){
                                 {/* px-2 py-1 (内側の余白) と rounded (角丸) を足すとさらにボタンらしくなりますよ */}
                                 <Link
                                     href={`/fridge/${stock.id}/edit`}
-                                    className="text-blue-500 bg-blue-200 hover:underline w-15 text-center py-2 rounded"
+                                    className="text-blue-500 bg-blue-200 hover:underline w-16 text-center py-2 rounded"
                                 >
                                     編集
                                 </Link>
                                 
                                 <button
                                     onClick={() => handleDelete(stock.id)}
-                                    className="text-red-500 bg-red-200 hover:underline w-15 text-center py-2 rounded"
+                                    className="text-red-500 bg-red-200 hover:underline w-16 text-center py-2 rounded"
                                 >
                                     削除
                                 </button>

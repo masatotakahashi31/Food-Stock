@@ -37,7 +37,7 @@ export default function TransferToFridgeButton({ shoppingId, isFood, isPurchased
         // さっき作った actions.ts の関数を呼び出してデータベース更新！
         await transferToFridge(shoppingId)
 
-        // 親（ShoppingList）から渡された関数を実行して、画面から即座に消す！
+        // 親（ShoppingList）から渡された関数を実行→Listに伝わり{() => handleTransferComplete(item.id)}が実行
         onTransferComplete()
     }
 

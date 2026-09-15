@@ -131,12 +131,12 @@ export default function ShoppingList({ items }: Props) {
                                     <div className="flex gap-2 items-center">
                                     <Link  
                                         href={`/shopping/${item.id}/edit`}
-                                        className="text-blue-500 bg-blue-200 hover:underline w-15 text-center py-2 rounded"
+                                        className="text-blue-500 bg-blue-200 hover:underline w-16 text-center py-2 rounded"
                                     >
                                         編集
                                     </Link>
                                     <button 
-                                        className="text-red-500 bg-red-200 hover:underline w-15 text-center py-2 rounded" 
+                                        className="text-red-500 bg-red-200 hover:underline w-16 text-center py-2 rounded" 
                                         onClick={() => handleDelete(item.id)}
                                     >
                                         削除
