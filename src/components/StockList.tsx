@@ -89,8 +89,8 @@ export default function StockList({initialStocks}: Props){
             return { backgroundColor: '#fef3c7', color: '#d97706', padding: '10px', borderRadius: '5px' }
         }
 
-        // 上のどちらにも当てはまらない（期限まで3日以上ある）場合は、色を変えず、少しだけ余白（padding）をつける設定
-        return { padding: '10px' } 
+        // 上のどちらにも当てはまらない（期限まで3日以上ある）場合は、色を変えない
+        return
     }
 
     // ----------------------------------------------------
@@ -152,16 +152,18 @@ export default function StockList({initialStocks}: Props){
                         
                         {/* 4マス目：期限やメモなどの細かい情報 */}
                         <td className="p-4 text-sm text-gray-600">
+                          <div className="flex flex-col">
                             {stock.expirationDate && (
                                 <span style={getHighlightStyle(stock.expirationDate)}>
                                   期限: {stock.expirationDate.toLocaleDateString('ja-JP')} </span>
                             )}
                             {stock.purchaseDate && (
-                                <span> / 購入: {stock.purchaseDate.toLocaleDateString('ja-JP')} </span>
+                                <span>購入: {stock.purchaseDate.toLocaleDateString('ja-JP')} </span>
                             )}
                             {stock.memo && (
-                                <span> / {stock.memo}</span>
+                                <span>メモ:{stock.memo}</span>
                             )}
+                          </div>
                         </td>
                         
                         {/* 5マス目：操作ボタンたち */}
