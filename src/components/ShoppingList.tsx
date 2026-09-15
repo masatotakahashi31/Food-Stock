@@ -23,6 +23,8 @@ type ShoppingItem = {
     itemName: string
     quantity: number
     isPurchased: boolean
+    createdAt: Date
+    addType: string
     category: {
         categoryName: string
         isFood: boolean
@@ -114,7 +116,9 @@ export default function ShoppingList({ items }: Props) {
                         // メモ帳のデータを1件ずつ取り出し、表の行（<tr>）を作ります。Reactのルールで、行ごとに固有の目印（key）を設定します
                         localItems.map((item) => (
                             <tr key={item.id} className="border-b">
-                                <td className="p-4 font-bold">{item.itemName}</td>
+                                <td className="p-4 font-bold">{item.itemName}
+                                <div className="flex flex-col text-sm text-gray-400">登録日: {item.createdAt.toLocaleDateString('ja-JP')}</div>
+                                <div className="flex flex-col text-sm text-gray-400">{item.addType}</div></td>
                                 <td className="p-4">{item.category.categoryName}</td>
                                 <td className="p-4">{item.quantity}</td>
                                 <td className="p-4">

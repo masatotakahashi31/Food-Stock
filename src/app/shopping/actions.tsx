@@ -73,7 +73,7 @@ export async function addShoppingItem(formData: FormData) {
                 categoryId: categoryId,
                 itemName: itemName,
                 quantity: quantity,
-                addType: 'manual', // 手入力の目印
+                addType: '手動追加', // 手入力の目印
             }
         })
         
