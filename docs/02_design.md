@@ -87,39 +87,3 @@ CREATE TABLE shopping (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
-
-## 6. ディレクトリ・ファイル構成（予定）
-フロントエンドとバックエンド（Server Actions）の境界を明確にするため、以下の構成とする。
-
-```text
-src/
-├── app/                       (ページとURLルーティングの設定)
-│   ├── layout.tsx             (共通枠：ヘッダーやタブ切替)
-│   ├── page.tsx               (アクセス時に /fridge へ飛ばす処理)
-│   │
-│   ├── fridge/                (冷蔵庫機能のURL：/fridge)
-│   │   ├── page.tsx           (① 在庫一覧画面)
-│   │   ├── actions.ts         (④ 削除やワンタップ追加などのDB処理まとめ)
-│   │   ├── new/
-│   │   │   └── page.tsx       (② 在庫登録画面)
-│   │   └── [id]/
-│   │       └── edit/
-│   │           └── page.tsx   (③ 在庫編集画面)
-│   │
-│   └── shopping/              (お買い物機能のURL：/shopping)
-│       ├── page.tsx           (⑤ お買い物一覧画面)
-│       ├── actions.ts         (⑧ 削除や一括移行などのDB処理まとめ)
-│       ├── new/
-│       │   └── page.tsx       (⑥ お買い物登録画面)
-│       └── [id]/
-│           └── edit/
-│               └── page.tsx   (⑦ お買い物編集画面)
-│
-└── components/                (画面の部品置き場：クライアントコンポーネント)
-    ├── StockForm.tsx          (在庫の入力フォーム：②と③で使い回す)
-    ├── ShoppingForm.tsx       (お買い物の入力フォーム：⑥と⑦で使い回す)
-    ├── DeleteButton.tsx       (クリックで削除を実行する汎用ボタン部品)
-    ├── QuickAddButton.tsx     (在庫からお買い物リストへワンタップ追加するボタン)
-    └── BulkTransferButton.tsx (購入済みの食材を一括で冷蔵庫へ移行するボタン)
-
-

@@ -65,9 +65,32 @@ src/
 │           └── edit/
 │               └── page.tsx   (⑦ お買い物編集画面)
 │
-└── components/                (画面の部品置き場：クライアントコンポーネント)
+└── └── components/                (画面の部品置き場：クライアントコンポーネント)
+    ├── StockList.tsx          (在庫一覧表示：①で使用)
     ├── StockForm.tsx          (在庫の入力フォーム：②と③で使い回す)
+    ├── ShoppingList.tsx          (お買い物一覧表示：⑤で使用)
     ├── ShoppingForm.tsx       (お買い物の入力フォーム：⑥と⑦で使い回す)
-    ├── DeleteButton.tsx       (クリックで削除を実行する汎用ボタン部品)
     ├── QuickAddButton.tsx     (在庫からお買い物リストへワンタップ追加するボタン)
-    └── BulkTransferButton.tsx (購入済みの食材を一括で冷蔵庫へ移行するボタン)
+    └── TransferToFridgeButton.tsx (購入済みの食材を冷蔵庫へ移行するボタン)
+```
+## 7. 画面遷移図
+```text
+  ├──► [冷蔵庫（在庫）一覧画面] (/src/app/fridge/page.tsx)
+         │      └── (削除ボタン) ──► 削除完了
+  │      │
+  │      ├──► [新規在庫登録画面] (/src/app/fridge/new/page.tsx)
+  │      │      └── (登録完了) ──► 冷蔵庫一覧へ戻る
+  │      │
+  │      └──► [在庫編集・詳細画面] (/src/app/fridge/[id]/edit/page.tsx)
+  │             └── (更新) ──► 冷蔵庫一覧へ戻る
+  │
+  └──► [買い物リスト一覧画面] (/src/app/shopping/page.tsx)
+         │      └── (削除ボタン) ──► 削除完了
+         │
+         ├──► [新規買い物アイテム登録画面] (/src/app/shopping/new/page.tsx)
+         │      └── (登録完了) ──► 買い物リスト一覧へ戻る
+         │
+         └──► [買い物アイテム編集画面] (/src/app/shopping/[id]/edit/page.tsx)
+                └── (更新) ──► 買い物リスト一覧へ戻る
+
+```
