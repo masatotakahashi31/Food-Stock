@@ -52,6 +52,7 @@ export default function ShoppingList({ items }: Props) {
     // ----------------------------------------------------
     // 現在の状態（trueかfalse）を受け取り、! をつけて「逆」に
     const handleToggle = async (id: number, currentStatus: boolean) => {
+        const previousItems = [...localItems]
         const nextStatus = !currentStatus
 
         // メモ帳を1行ずつ確認（map）して、押されたIDと同じ行だけ新しい状態（nextStatus）に上書きし、画面を即座に切り替え
@@ -65,21 +66,41 @@ export default function ShoppingList({ items }: Props) {
         // Reactの状態（State）を更新し、画面のチェック状態を即座に再描画する（楽観的UI更新
         setLocalItems(newItems)
 
+        try{        
         // （サーバー）に通信して、実際のデータベースも同じ状態に書き換え
-        await toggleShoppingItem(id, nextStatus)
+        const response = await toggleShoppingItem(id, nextStatus)
+        
+        if (!response.success) {
+            throw new Error(response.error || "更新に失敗しました")
+        }
+    }catch(error){
+        setLocalItems(previousItems)
+        console.log(error)
+        alert("更新に失敗したため、表示を元に戻しました。")
     }
+}
 
     // ----------------------------------------------------
     // アクション：削除ボタンを押した時の処理
     // ----------------------------------------------------
     const handleDelete = async (id: number) => {
+        const previousItems = [...localItems];
         // 押されたID「以外」のデータを残す（filter）ことで、画面から即座に消す
         const newItems = localItems.filter((item) => item.id !== id)
         setLocalItems(newItems)
-        
-        // その後にデータベースからも削除
-        await deleteShoppingItem(id)
-    }
+
+        try {
+            const response = await deleteShoppingItem(id);
+
+            if (!response.success) {
+                throw new Error(response.error || "削除処理に失敗しました");
+            }
+        }catch (error) {
+            setLocalItems(previousItems);
+            console.log(error);
+            alert("削除処理に失敗したため、表示を元に戻しました。");
+        }
+    };
 
     // ----------------------------------------------------
     // アクション：冷蔵庫への移行が完了した時の処理

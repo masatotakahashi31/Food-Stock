@@ -5,6 +5,7 @@
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // 裏側（サーバー）でデータベースを更新するための自作関数を読み込み
 import { transferToFridge } from '@/app/shopping/actions'
+import {useState} from "react"
 
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -26,20 +27,28 @@ export default function TransferToFridgeButton({ shoppingId, isFood, isPurchased
 
     // 非食品、またはまだ買っていない場合は「操作不可（true）」にする
     const isDisabled = !isFood || !isPurchased
-
+    const [isPending, setIsPending] = useState(false)
     // ----------------------------------------------------
     // アクション：ボタンが押された時の処理
     // ----------------------------------------------------
     const handleTransfer = async () => {
-        // ボタンが押せない状態なら何もしない（念のための二重ブロック）
-        if (isDisabled) return 
+        if (isDisabled) return
+        setIsPending(true)
 
-        // さっき作った actions.ts の関数を呼び出してデータベース更新！
-        await transferToFridge(shoppingId)
-
-        // 親（ShoppingList）から渡された関数を実行→Listに伝わり{() => handleTransferComplete(item.id)}が実行
-        onTransferComplete()
+        try {
+            const response = await transferToFridge(shoppingId)
+            if (!response.success) {
+                throw new Error(response.error || "移行処理に失敗しました")
+            }
+            onTransferComplete()   // ★ 成功したときだけ画面から消す
+        } catch (error) {
+            console.log(error)
+            alert("移行に失敗しました。もう一度お試しください。")
+        } finally {
+            setIsPending(false)
+        }
     }
+
 
 
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -56,7 +65,7 @@ export default function TransferToFridgeButton({ shoppingId, isFood, isPurchased
                     : ' bg-green-200 hover:underline'      // false（押せる時）
             }`}
         >
-            移行
+            {isPending ? "移行中..." : "移行"}
         </button>
     )
 }

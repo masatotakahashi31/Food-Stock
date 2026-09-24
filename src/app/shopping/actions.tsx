@@ -9,17 +9,23 @@ import {redirect} from 'next/navigation'
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function deleteShoppingItem(id: number) {
     // データベースから、指定されたIDと一致するお買い物データを削除します
-    await prisma.shopping.delete({
-        where: {id: id}
-    })
-    // 削除が終わったら、お買い物リスト画面の古いキャッシュ（記憶）を捨てて最新にします
+    try{
+        await prisma.shopping.delete({
+        where: {id: id}});
+// 削除が終わったら、お買い物リスト画面の古いキャッシュ（記憶）を捨てて最新にします
     revalidatePath('/shopping')
-}
-
+        return{success: true};
+    }catch(error){
+            console.log(error);
+            return{success: false, error:"削除に失敗しました"};
+        }
+    }
+    
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ② 状態切り替え（購入済みチェック）機能
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function toggleShoppingItem(id: number, isPurchased: boolean) {
+    try{
     // データベースの該当データを、チェックボックスの最新の状態（true/false）で上書きします
     await prisma.shopping.update({
         where: {id: id},
@@ -27,6 +33,11 @@ export async function toggleShoppingItem(id: number, isPurchased: boolean) {
     })
     // 更新が終わったら画面を最新状態にします
     revalidatePath('/shopping')
+    return{success: true}
+}catch (error) {
+    console.log(error)
+    return{success:false, error: "状態の更新に失敗しました"}
+    }
 }
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -39,6 +50,7 @@ export async function addShoppingItem(formData: FormData) {
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
 
+    try{
     // データベースから、未購入（isPurchased: false）かつ「入力された品名」と完全に一致するデータを探します
     // データベースの中に条件に合うデータが複数あっても、上から順番に見て最初に見つかった1件だけを取得
     const existingItem = await prisma.shopping.findFirst({
@@ -76,10 +88,13 @@ export async function addShoppingItem(formData: FormData) {
                 addType: '手動追加', // 手入力の目印
             }
         })
-        
+    }    
     // 見つからなかった場合の分岐を閉じます
-    }
-
+    
+}catch(error){
+    console.log(error)
+    return{success: false, error: "追加に失敗しました。"}
+}
     // 保存や更新が終わったら、お買い物リスト一覧画面に強制移動させます
     redirect('/shopping')
 }
@@ -93,6 +108,7 @@ export async function editShoppingItem(id: number, formData: FormData) {
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
 
+    try{
     // 指定されたIDのデータを、画面で入力された新しい内容で上書き（update）します
     await prisma.shopping.update({
         where: {id: id},
@@ -102,17 +118,22 @@ export async function editShoppingItem(id: number, formData: FormData) {
             quantity: quantity,
         }
     })
-    
     // 更新が終わったら、一覧画面のキャッシュを最新にしてから、一覧画面へ強制移動します
     revalidatePath('/shopping')
+ }catch(error){
+    console.log(error)
+    return{success: false, error: "更新に失敗しました"}
+ }   
     redirect('/shopping')
 }
+
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ⑤ ワンタップ追加機能（冷蔵庫からお買い物リストへ）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // データベースを操作する処理 ボタンから「カテゴリID」「名前」「数量」の3つのデータを受け取ります
 export async function quickAddShoppingItem(categoryId: number, itemName: string, quantity: number) {
+    try{
     // 「既存のデータ（existingItem）」という箱を用意し、Prisma（データベース操作ツール）を使って、条件に合うデータを「1件だけ探し
     const existingItem = await prisma.shopping.findFirst({
         // 探す条件（where）です。「ボタンから受け取った品名と同じ名前」かつ「まだ買ってない（isPurchased: false）」データを探します
@@ -150,6 +171,11 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
     // 更新が終わったら、買い物リストと在庫画面（冷蔵庫）のキャッシュを捨てて最新にする
     revalidatePath('/shopping')
     revalidatePath('/fridge') 
+    return{success:true}
+}catch(error){
+    console.log(error)
+    return{success:false, error: "お買い物リストへの追加に失敗しました"}
+    }
 }
 
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -157,54 +183,43 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ★ 購入済みアイテムを冷蔵庫（在庫）へ移行する関数
 export async function transferToFridge(shoppingId: number) {
-    // 1. お買い物リストのデータを取得（カテゴリの isFood も一緒に取得する）
-    const item = await prisma.shopping.findUnique({
-        where: { id: shoppingId },
-        include: { category: true } // ★リレーション先のカテゴリ情報も引き出す
-    })
-
-    // 安全装置（エラーチェック）そもそもそのIDのお買い物データが存在するか確認します。なければエラーで止め
-    if (!item) throw new Error("データが見つかりません")
-        // そのアイテムが「購入済み（isPurchased が true）」になっているか確認します。まだ買ってないならエラー
-    if (!item.isPurchased) throw new Error("まだ購入されていません")
-    
-    // ★ 要件クリア：非食品（isFood = false）はバックエンドでもしっかり弾く！
-    if (!item.category.isFood) {
-        throw new Error("食品ではないため冷蔵庫に移行できません")
-    }
-
-    // 食材マスタ（Food）の検索 or 新規作成（upsert）
-    // お買い物リストにある食材名（item.itemName）が、すでにデータベースの「食品マスタ」に登録されているか
-    const food = await prisma.food.upsert({
-        where: { foodName: item.itemName },
-        // あったら：カテゴリIDを最新のものに上書き更新
-        update: { categoryId: item.categoryId }, // すでにあったらカテゴリを最新に更新
-        // なかったら：その名前とカテゴリで新しく食品マスタを作成
-        create: {
-            foodName: item.itemName,
-            categoryId: item.categoryId,
-        }
-    })
-
-    // 3. 数量の分だけ「個別の在庫レコード（数量: 1）」として1件ずつ作成する
-    // 例：数量が 4 だった場合、stockQuantity: 1 のレコードが 4 回登録されます
-    // for (...): 指定した回数だけ、中の処理を繰り返し（ループ）実行する
-    for (let i = 0; i < item.quantity; i++) {
-        await prisma.stock.create({
-            data: {
-                foodId: food.id,
-                stockQuantity: 1, // ★ 個別に管理するため数量は1で登録
-                purchaseDate: new Date(), // 購入日は「今日」として登録
-            }
+    try {
+        const item = await prisma.shopping.findUnique({
+            where: { id: shoppingId },
+            include: { category: true },
         })
+
+        // ★ throw → return に変更
+        if (!item) return { success: false, error: "データが見つかりません" }
+        if (!item.isPurchased) return { success: false, error: "まだ購入されていません" }
+        if (!item.category.isFood) return { success: false, error: "食品ではないため冷蔵庫に移行できません" }
+
+        // ★ prisma → tx に変えて、全部成功 or 全部なかったことにする
+        await prisma.$transaction(async (tx) => {
+            const food = await tx.food.upsert({
+                where: { foodName: item.itemName },
+                update: { categoryId: item.categoryId },
+                create: { foodName: item.itemName, categoryId: item.categoryId },
+            })
+
+            for (let i = 0; i < item.quantity; i++) {
+                await tx.stock.create({
+                    data: {
+                        foodId: food.id,
+                        stockQuantity: 1,
+                        purchaseDate: new Date(),
+                    },
+                })
+            }
+
+            await tx.shopping.delete({ where: { id: shoppingId } })
+        })
+
+        revalidatePath('/shopping')
+        revalidatePath('/fridge')
+        return { success: true }
+    } catch (error) {
+        console.log(error)
+        return { success: false, error: "冷蔵庫への移行に失敗しました" }
     }
-
-    // 4. 移行完了後、お買い物リストからは削除する（移行＝移動のため）
-    await prisma.shopping.delete({
-        where: { id: shoppingId }
-    })
-
-    // キャッシュをクリアして画面を最新化
-    revalidatePath('/shopping')
-    revalidatePath('/fridge')
 }

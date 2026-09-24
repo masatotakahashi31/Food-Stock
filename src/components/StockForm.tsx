@@ -1,3 +1,4 @@
+"use client"
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ① 型定義（データルールの設定）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -7,6 +8,8 @@ type Category = {
   id: number
   categoryName: string
 }
+
+type ActionResult = {success: boolean; error?: string} | void
 
 // 編集用の「初期データ」の設計図
 type InitialData = {
@@ -27,7 +30,7 @@ type Props = {
   
   // 「フォームを送信したときに実行する関数を渡してね」という意味
   // void（ボイド）は「空っぽ」という意味で、「この関数は保存処理をするだけで、画面に何かデータを返すわけではない」
-  formAction: (formData: FormData) => void
+  formAction: (formData: FormData) => Promise<ActionResult>
   
   // initialData （「?」をつけることで、「新規登録のときは渡さなくてもOK」というルール）
   initialData?: InitialData
@@ -38,12 +41,19 @@ type Props = {
 // ② メインコンポーネント（フォームの描画）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export default function StockForm({ categories, formAction, initialData }: Props) {
-  
+  const handleAction = async (formData: FormData) => {
+    const result = await formAction(formData)
+    if (result && !result.success){
+      alert(result.error)
+    }
+    }
   // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
   // ③ 画面の表示（HTML / UI部分）
   // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
   return (
-    <form action={formAction} className="ml-2 w-[97%]">
+    // form action「このフォームが送信されたら、
+      // 親から受け取った関数を実行してね」という指示
+    <form action={handleAction} className="ml-2 w-[97%]">
 
         {/* initialData が存在している（＝編集画面である）とき「だけ」、裏側でこっそり在庫IDを送信します */}
         {initialData && (

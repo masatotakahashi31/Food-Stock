@@ -1,5 +1,6 @@
 "use client"
 
+import {useState} from "react"
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ① インポート（必要な部品の読み込み）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -23,19 +24,28 @@ type Props = {
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ボタン部品の本体です。親からデータを受け取りつつ、もし quantity が渡されなかった場合は、勝手に「1」をセット
 export default function QuickAddButton({ categoryId, itemName, quantity = 1 }: Props) {
+    const[isPending, setIsPending] = useState(false)
     
     // ----------------------------------------------------
     // アクション：ボタンが押された時の処理
     // ----------------------------------------------------
     const handleQuickAdd = async () => {
+        if (isPending) return
+        setIsPending(true)
 
-        // さっき作った actions.ts の関数を呼び出してデータベース更新
-        await quickAddShoppingItem(categoryId, itemName, quantity)
-        
-        // 追加完了のメッセージ
-        alert(`${itemName} を買い物リストに追加しました！`)
+        try {
+            const response = await quickAddShoppingItem(categoryId, itemName, quantity)
+            if (!response.success) {
+                throw new Error(response.error || "追加処理に失敗しました")
+            }
+            alert(`${itemName} を買い物リストに追加しました！`)   // 成功時だけ
+        } catch (error) {
+            console.log(error)
+            alert("追加に失敗しました。もう一度お試しください。")
+        } finally {
+            setIsPending(false)
+        }
     }
-
 
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     // ④ 画面の表示（HTML / UI部分）
@@ -43,6 +53,7 @@ export default function QuickAddButton({ categoryId, itemName, quantity = 1 }: P
     return (
         <button 
             type="button"
+            disabled={isPending}
             className="bg-gray-100 hover:bg-gray-300 rounded-full transition-colors"
             onClick={handleQuickAdd}
         >

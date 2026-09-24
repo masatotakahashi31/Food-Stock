@@ -1,3 +1,4 @@
+"use client"
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ① 型定義（データルールの設定）
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -7,12 +8,14 @@ type Category = {
     categoryName: string
 }
 
+type ActionResult = { success: boolean; error?: string} | void
+
 // 外から受け取るデータ（Props）のルールを設定します
 type Props = {
     // プルダウン表示用のカテゴリ一覧のデータ
     categories: Category[]
     // フォームを送信した時に実行される関数
-    action: (formData: FormData) => void
+    action: (formData: FormData) => Promise<ActionResult>
     
     // 編集の時だけ渡される「最初のデータ」のルールを追加（?をつけると「無くてもOK」という意味）
     initialData?: {
@@ -29,11 +32,17 @@ type Props = {
 // 親から categories、action、initialData を受け取ってフォームを作ります
 export default function ShoppingForm({categories, action, initialData}: Props) {
 
+    const handleAction = async (formData: FormData) => {
+        const result = await action(formData)
+        if(result && !result.success){
+            alert(result.error)
+        }
+    }
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     // ③ 画面の表示（HTML / UI部分）
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return(
-        <form action={action} className="ml-2 w-[97%]">
+        <form action={handleAction} className="ml-2 w-[97%]">
             
             {/* カテゴリ入力欄を囲む箱 */}
             <div className="mt-5">

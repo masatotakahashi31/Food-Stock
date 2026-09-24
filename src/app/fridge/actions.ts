@@ -3,8 +3,10 @@
 
 // データベースを操作するためのPrismaクライアントを読み込み
 import {prisma} from '@/lib/prisma'
+import { revalidatePath } from 'next/cache'
 //処理が終わった後に別の画面へ強制的に移動させるための関数を読み込み
 import {redirect} from 'next/navigation'
+import { text } from 'stream/consumers'
 
 //フォームから送られてきたデータ（formData）を受け取る非同期関数を定義し、外部から呼び出せるよう公開（export
 export async function addStock(formData: FormData){
@@ -17,19 +19,6 @@ export async function addStock(formData: FormData){
     const categoryId = Number(formData.get('categoryId'))
     // 食材名を文字列として取得
     const foodName = formData.get('foodName') as string
-
-    // ===== 新しい食材名で upsert（あれば更新、なければ作成）を実行する処理 =====
-    const food = await prisma.food.upsert({
-        // 探すための目印（条件）：入力された食材名（foodName）が、すでにデータベースに登録されているか探します
-        where: {foodName: foodName},
-        // もし既に見つかった場合】：そのデータのカテゴリIDを、今回選ばれた新しいカテゴリIDに上書き更新
-        update: {categoryId: categoryId},
-        // 【もし見つからなかった場合（新規の食材だった場合）】：入力された食材名とカテゴリIDをセットにして、新しくデータベースに登録
-        create: {
-            foodName: foodName,
-            categoryId: categoryId,
-        }
-    })
 
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     // ② 在庫（Stock）に関するデータの準備・登録
@@ -55,10 +44,25 @@ export async function addStock(formData: FormData){
     // 空っぽ（未入力）だったら、強制的に null（データなし）に変換
     const memo = memoString ? memoString : null
 
+        // ===== 新しい食材名で upsert（あれば更新、なければ作成）を実行する処理 =====
+ try{   
+        await prisma.$transaction(async (tx) => {
+        const food = await tx.food.upsert({
+        // 探すための目印（条件）：入力された食材名（foodName）が、すでにデータベースに登録されているか探します
+        where: {foodName: foodName},
+        // もし既に見つかった場合】：そのデータのカテゴリIDを、今回選ばれた新しいカテゴリIDに上書き更新
+        update: {categoryId: categoryId},
+        // 【もし見つからなかった場合（新規の食材だった場合）】：入力された食材名とカテゴリIDをセットにして、新しくデータベースに登録
+        create: {
+            foodName: foodName,
+            categoryId: categoryId,
+        }
+    })
+
     // 最後に、stock（在庫）テーブルへの登録処理を開始
     // 左側の stockQuantity は、データベースで決めた列の名前
     // 右側の quantity は、画面から受け取って作った変数の名前
-    await prisma.stock.create({
+    await tx.stock.create({
         // 登録するデータを指定
         data: {
             // 上の処理で「使い回した既存のID」または「新しく作成したID」のどちらかが入っている food.id を指定
@@ -71,25 +75,28 @@ export async function addStock(formData: FormData){
             memo: memo,
         }
     })
-
-    // すべて完了したら冷蔵庫一覧画面へ移動
-    redirect('/fridge')
+}) 
+}catch(error){
+    console.log(error)
+    return{success: false, error: "在庫の追加に失敗しました"}
 }
 
+    revalidatePath('/fridge')
+    redirect('/fridge')
+ }
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ③ 削除機能
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
 // この関数を呼び出すときに、「必ず数字（number）のIDを一つ渡し
-export async function deleteStockById(id: number){
-    // try の中身をやってみて、もしデータベースが見つからないなどのエラーが起きたら、アプリをクラッシュさせずに catch の方に逃げて、画面の裏側（コンソール）
-    try{
-        // データベースの処理が終わるまで「ここで待機
-        await prisma.stock.delete({
-            where: {id}
-        })
-    }catch (error) {
-        console.log("削除エラー",error)
+export async function deleteStockById(id: number) {
+    try {
+        await prisma.stock.delete({ where: { id } })
+        revalidatePath('/fridge')
+        return { success: true }
+    } catch (error) {
+        console.log("削除エラー", error)
+        return { success: false, error: "削除に失敗しました" }
     }
 }
 
@@ -98,84 +105,59 @@ export async function deleteStockById(id: number){
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 
 // フォームから送られてきたデータ（formData）を受け取って、在庫を更新する関数
-export async function updateStock(formData: FormData){
-    // 「更新したい在庫のID」を取り出し、数値(Number)に変換して変数 id に入れ
+export async function updateStock(formData: FormData) {
     const id = Number(formData.get('id'))
-
-    // フォームから入力された「数量(quantity)」を取り出し、数値に変換して変数 stockQuantity に入れ
     const stockQuantity = Number(formData.get('quantity'))
-
-    // フォームから入力された「メモ(memo)」を文字列(string)として取り出し、変数 memoString に入れ
-    const memoString = formData.get('memo') as string
-    // もし memoString に文字が入っていればそのまま使い、空っぽなら null（データなし）にして変数 memo に入れ
-    const memo =memoString ? memoString: null
-
-    // フォームから入力された「消費期限(expirationDate)」を文字列として取り出し、変数 expirationDateString に入れ
-    const expirationDateString = formData.get('expirationDate') as string
-    // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら null にして変数 expirationDate に入れ
-    const expirationDate = expirationDateString ? new Date(expirationDateString): null
-
-    // フォームから入力された「購入日時(purchaseDate)」を文字列として取り出し、変数 purchaseDateString に入れ
-    const purchaseDateString = formData.get('purchaseDate') as string
-    // もし日付が入力されていれば Date型（日付データ）に変換し、未入力なら現在の日時（今日・今の時間）が自動的に
-    const purchaseDate = purchaseDateString ? new Date(purchaseDateString): new Date()
-
-    // フォームから選択された「カテゴリのID(categoryId)」を取り出し、数値に変換して変数 categoryId に入れ
     const categoryId = Number(formData.get('categoryId'))
-    // フォームから入力された「食材名(foodName)」を文字列として取り出し、変数 foodName に入れ
     const foodName = formData.get('foodName') as string
 
-    // ===== 更新前の「古い食品ID」をこっそり控えておく処理 =====
-    // 編集前のこの在庫データが、もともと「どの食品ID（例：みかんmのID）」と結びついていたのかをあらかじめ調べて変数 oldStock に入れておき
-    const oldStock = await prisma.stock.findUnique({
-        where: {id:id},
-        select: {foodId: true} // 「名前」や「数量」は要らないので、結びついている foodId だけをピンポイントで取得
-    })
+    const memoString = formData.get('memo') as string
+    const memo = memoString ? memoString : null
 
-    // ===== 新しい食材名で upsert（あれば更新、なければ作成）を実行する処理 =====
-    const food = await prisma.food.upsert({
-        // 探すための目印（条件）：入力された食材名（foodName）が、すでにデータベースに登録されているか探します
-        where: {foodName: foodName},
-        // もし既に見つかった場合】：そのデータのカテゴリIDを、今回選ばれた新しいカテゴリIDに上書き更新
-        update: {categoryId: categoryId},
-        // 【もし見つからなかった場合（新規の食材だった場合）】：入力された食材名とカテゴリIDをセットにして、新しくデータベースに登録
-        create: {
-            foodName: foodName,
-            categoryId: categoryId,
-        }
-    })
+    const expirationDateString = formData.get('expirationDate') as string
+    const expirationDate = expirationDateString ? new Date(expirationDateString) : null
 
-    // 実際の「在庫(stock)」のデータを上書き更新する処理
-    await prisma.stock.update({
-        // 更新する条件：一番最初に受け取った、隠し項目の「在庫ID」と同じものを対象
-        where: {id:id},
-        data: {
-            // （foodId）を、上で見つけた（または作った）食品データのID（food.id）に貼り替え
-            foodId:food.id,
-            // 「数量」を上書き
-            stockQuantity,
-            // 「消費期限」を上書き
-            expirationDate,
+    const purchaseDateString = formData.get('purchaseDate') as string
+    const purchaseDate = purchaseDateString ? new Date(purchaseDateString) : new Date()
 
-            purchaseDate,
-            // 「メモ」を上書き
-            memo,
-        }
-    })
+    let oldFoodId: number | undefined
+    let newFoodId: number | undefined
 
-    // 変更前の食品IDがちゃんとあるか&&
-    // 編集前後で、食品のID（名前）が別のものに変わったか
-    // さらに、その古い食品が他の場所で使われていない場合のみ削除する
-    if (oldStock?.foodId && oldStock.foodId !== food.id){
-        try {
-            // prisma.food.delete を実行したとき、もし他の在庫やお買い物リストでその古いIDが使われていれば、データベースがまだ使われてるから消しちゃダメとエラーを発生
-            await prisma.food.delete({
-                where: {id: oldStock.foodId}
+    try {
+        const oldStock = await prisma.stock.findUnique({
+            where: { id },
+            select: { foodId: true },
+        })
+        oldFoodId = oldStock?.foodId
+
+        newFoodId = await prisma.$transaction(async (tx) => {
+            const food = await tx.food.upsert({
+                where: { foodName },
+                update: { categoryId },
+                create: { foodName, categoryId },
             })
-        }catch(error){
-            // そのエラーを catch (error) がキャッチし、中身を空っぽ（{}）にしておくことで、エラーで画面を赤く止めたりせず、古いデータだけを安全に残してスルー
+
+            await tx.stock.update({
+                where: { id },
+                data: { foodId: food.id, stockQuantity, expirationDate, purchaseDate, memo },
+            })
+
+            return food.id
+        })
+    } catch (error) {
+        console.log(error)
+        return { success: false, error: "更新に失敗しました" }
+    }
+
+    // 古い食品マスタの掃除(他で使われていれば失敗するが、それは正常なので無視)
+    if (oldFoodId !== undefined && oldFoodId !== newFoodId) {
+        try {
+            await prisma.food.delete({ where: { id: oldFoodId } })
+        } catch (error) {
+            console.log("古い食品マスタは他で使用中のため残しました", error)   // ★ 空だった catch にログを追加
         }
     }
 
-    redirect('/fridge')
+    revalidatePath('/fridge')   // ★ 追加
+    redirect('/fridge')         // ★ try の外
 }

@@ -97,15 +97,21 @@ export default function StockList({initialStocks}: Props){
     // アクション：削除ボタンが押された時の処理
     // ----------------------------------------------------
     // 削除ボタンが押された時に動く関数（引数として、押された項目の id を受け取り
-    const handleDelete = async (id: number) =>{
-        // 今のメモ帳(stocks)の中から、「押されたidとは『違う(!==)』データ」だけを残した新しいリストを作り
-        // 押されたデータが除外されたリスト
-        const newStocks = stocks.filter((stock) => stock.id !== id)
-        // (setstocks)を使って、メモ帳をさっき作った「新しいリスト」に書き換え
-        setstocks(newStocks)
-        // 裏側の処理(deleteStockById)を呼び出し、データベースからもこっそり削除します。
-        await deleteStockById(id)
+    const handleDelete = async (id: number) => {
+    const previousStocks = [...stocks]   // ★ 元の状態を控える
+    setstocks(stocks.filter((stock) => stock.id !== id))
+
+    try {
+        const response = await deleteStockById(id)
+        if (!response.success) {
+            throw new Error(response.error || "削除処理に失敗しました")
+        }
+    } catch (error) {
+        setstocks(previousStocks)   // ★ 失敗したら戻す
+        console.log(error)
+        alert("削除処理に失敗したため、表示を元に戻しました。")
     }
+}
 
 
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
@@ -113,7 +119,7 @@ export default function StockList({initialStocks}: Props){
     // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
     return(
         // className="w-full" で、画面の横幅いっぱい
-        <table className="w-full text-left">
+        <table className="w-full text-left"> 
             
             {/* ★ここがポイント2： 表の見出し（ヘッダー）を先に作ります */}
             <thead>
@@ -129,9 +135,11 @@ export default function StockList({initialStocks}: Props){
             {/*  ここからデータの出力（tbody）を始めます */}
             <tbody
 >
+                {/* 配列 stocks の中身を1つずつ取り出し、JSXの要素（行）に変換して並べます */}
                 {stocks.map((stock) => (
                     //<tr> (テーブルの行) 
                     <tr 
+                      // Reactが「どの行が変更されたか」を効率よく識別するために、ユニークなIDを設定
                         key={stock.id}
                         // ハイライト機能は、行全体に当てはめ
                         className={getHighlightStyle(stock.expirationDate)}
