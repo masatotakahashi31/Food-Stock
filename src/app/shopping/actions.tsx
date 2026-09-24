@@ -186,14 +186,18 @@ export async function transferToFridge(shoppingId: number) {
         }
     })
 
-    // 3. 取得（または作成）した食材マスタのIDを使って、在庫（Stock）に登録
-    await prisma.stock.create({
-        data: {
-            foodId: food.id,
-            stockQuantity: item.quantity,
-            purchaseDate: new Date(), // 購入日は「今日」として登録
-        }
-    })
+    // 3. 数量の分だけ「個別の在庫レコード（数量: 1）」として1件ずつ作成する
+    // 例：数量が 4 だった場合、stockQuantity: 1 のレコードが 4 回登録されます
+    // for (...): 指定した回数だけ、中の処理を繰り返し（ループ）実行する
+    for (let i = 0; i < item.quantity; i++) {
+        await prisma.stock.create({
+            data: {
+                foodId: food.id,
+                stockQuantity: 1, // ★ 個別に管理するため数量は1で登録
+                purchaseDate: new Date(), // 購入日は「今日」として登録
+            }
+        })
+    }
 
     // 4. 移行完了後、お買い物リストからは削除する（移行＝移動のため）
     await prisma.shopping.delete({
