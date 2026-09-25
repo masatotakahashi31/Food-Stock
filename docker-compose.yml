@@ -1,27 +1,48 @@
 services:
+# Next.jsアプリ側のサービスの名前
   app:
+  # 今いる場所（.）にある Dockerfile を読み込んで、このアプリ用のイメージを自分でビルド
     build: .
+    # 起動したときのコンテナの名前を food-stock-app
     container_name: food-stock-app
+    # パソコン側（ホスト）とコンテナ側でファイルを共有（マウント）するため
     volumes:
+    # パソコン側のソースコード（.）を、コンテナ内の /app ディレクトリにリアルタイムで同期
       - .:/app                      # ソースコードをマウント
+      # 重たい node_modules フォルダを名前付きボリュームとしてコンテナ内から切り離し、ファイルの読み書きや動作を高速化
       - node_modules:/app/node_modules  # node_modules は名前付きボリュームで高速化
+      # コンテナの中に入ってターミナルなどで作業するときの初期位置（カレントディレクトリ）を /app に指定
     working_dir: /app
+    # パソコン側とコンテナ側のネットワーク（ポート番号）を繋ぐ設定
     ports:
       - "3000:3000"
+      # コンテナが起動したあとすぐに終了してしまわないよう、無限にスリープ（待機）させてコンテナを常駐
     command: sleep infinity         # Dev Container 用に待機させる
+    # コンテナを起動する「順番」をコントロールする設定
     depends_on:
+    # データベース（db）側のコンテナが完全に起動したあとに、この app が立ち上がるように順番
       - db
 
   db:
+  # データベースとして、公式が提供している PostgreSQL のバージョン 18 のイメージを使用
     image: postgres:18
+    # データベースのコンテナ名を food-stock-db に固定
     container_name: food-stock-db
+    # コンテナの内部で読み込まれる環境変数（設定値）をまとめるブロック
     environment:
+    # データベースの管理者ユーザー名を postgres に設定
       POSTGRES_USER: postgres       # 初回起動時に作られるユーザー
+      # データベースのパスワードを postgres に設定しています（ローカル開発専用）
       POSTGRES_PASSWORD: postgres   # そのパスワード(ローカル開発専用)
+      # 初回起動時に自動で作成されるデータベースの名前を food-stock に指定
       POSTGRES_DB: food-stock    # 初回起動時に作られるデータベース名
+      # コンテナを停止・削除してもデータベースのデータが消えないように、データを db_data という名前のボリュームに保存
     volumes:
       - db_data:/var/lib/postgresql  # データを永続化(18+ は /data を付けない)
 
+# アプリやデータベースが共通して使う「名前付きボリューム」の置き場所を宣言する大本のブロック
 volumes:
+# アプリ側の node_modules をキャッシュ・独立させておくための名前付きボリュームの定義
   node_modules:
+  # データベースの保存データを管理するための名前付きボリュームの定義
   db_data:

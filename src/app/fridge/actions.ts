@@ -44,6 +44,19 @@ export async function addStock(formData: FormData){
     // 空っぽ（未入力）だったら、強制的に null（データなし）に変換
     const memo = memoString ? memoString : null
 
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return { success: false, error: "カテゴリを選択してください" }
+    }
+    if (!foodName || foodName.trim() === '') {
+        return { success: false, error: "食材名を入力してください" }
+    }
+    if (foodName.length > 100) {
+        return { success: false, error: "食材名は100文字以内で入力してください" }
+    }
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        return { success: false, error: "数量は1以上の整数で入力してください" }
+    }
+
         // ===== 新しい食材名で upsert（あれば更新、なければ作成）を実行する処理 =====
  try{   
         await prisma.$transaction(async (tx) => {
@@ -90,6 +103,10 @@ export async function addStock(formData: FormData){
 
 // この関数を呼び出すときに、「必ず数字（number）のIDを一つ渡し
 export async function deleteStockById(id: number) {
+    if (!Number.isInteger(id) || id <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
+
     try {
         await prisma.stock.delete({ where: { id } })
         revalidatePath('/fridge')
@@ -119,6 +136,31 @@ export async function updateStock(formData: FormData) {
 
     const purchaseDateString = formData.get('purchaseDate') as string
     const purchaseDate = purchaseDateString ? new Date(purchaseDateString) : new Date()
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return { success: false, error: "カテゴリを選択してください" }
+    }
+    if (!foodName || foodName.trim() === '') {
+        return { success: false, error: "食材名を入力してください" }
+    }
+    if (foodName.length > 100) {
+        return { success: false, error: "食材名は100文字以内で入力してください" }
+    }
+    if (!Number.isInteger(stockQuantity) || stockQuantity < 1) {
+        return { success: false, error: "数量は1以上の整数で入力してください" }
+    }
+    if (expirationDate && isNaN(expirationDate.getTime())) {
+        return { success: false, error: "消費期限の形式が正しくありません" }
+    }
+    if (isNaN(purchaseDate.getTime())) {
+        return { success: false, error: "購入日の形式が正しくありません" }
+    }
+    if (memo && memo.length > 255) {
+        return { success: false, error: "メモは255文字以内で入力してください" }
+    }
 
     let oldFoodId: number | undefined
     let newFoodId: number | undefined

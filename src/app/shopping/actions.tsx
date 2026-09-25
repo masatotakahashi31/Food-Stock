@@ -8,6 +8,9 @@ import {redirect} from 'next/navigation'
 // ① 削除機能
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function deleteShoppingItem(id: number) {
+    if (!Number.isInteger(id) || id <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
     // データベースから、指定されたIDと一致するお買い物データを削除します
     try{
         await prisma.shopping.delete({
@@ -25,6 +28,12 @@ export async function deleteShoppingItem(id: number) {
 // ② 状態切り替え（購入済みチェック）機能
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 export async function toggleShoppingItem(id: number, isPurchased: boolean) {
+    if (!Number.isInteger(id) || id <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
+    if (typeof isPurchased !== 'boolean') {
+        return { success: false, error: "不正な状態です" }
+    }
     try{
     // データベースの該当データを、チェックボックスの最新の状態（true/false）で上書きします
     await prisma.shopping.update({
@@ -49,6 +58,19 @@ export async function addShoppingItem(formData: FormData) {
     const categoryId = Number(formData.get('categoryId'))
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
+
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return { success: false, error: "カテゴリを選択してください" }
+    }
+    if (!itemName || itemName.trim() === '') {
+        return { success: false, error: "品名を入力してください" }
+    }
+    if (itemName.length > 100) {
+        return { success: false, error: "品名は100文字以内で入力してください" }
+    }
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        return { success: false, error: "数量は1以上の整数で入力してください" }
+    }
 
     try{
     // データベースから、未購入（isPurchased: false）かつ「入力された品名」と完全に一致するデータを探します
@@ -108,6 +130,22 @@ export async function editShoppingItem(id: number, formData: FormData) {
     const itemName = formData.get('itemName') as string
     const quantity = Number(formData.get('quantity'))
 
+    if (!Number.isInteger(id) || id <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return { success: false, error: "カテゴリを選択してください" }
+    }
+    if (!itemName || itemName.trim() === '') {
+        return { success: false, error: "品名を入力してください" }
+    }
+    if (itemName.length > 100) {
+        return { success: false, error: "品名は100文字以内で入力してください" }
+    }
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        return { success: false, error: "数量は1以上の整数で入力してください" }
+    }
+
     try{
     // 指定されたIDのデータを、画面で入力された新しい内容で上書き（update）します
     await prisma.shopping.update({
@@ -133,6 +171,16 @@ export async function editShoppingItem(id: number, formData: FormData) {
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // データベースを操作する処理 ボタンから「カテゴリID」「名前」「数量」の3つのデータを受け取ります
 export async function quickAddShoppingItem(categoryId: number, itemName: string, quantity: number) {
+    if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return { success: false, error: "不正なカテゴリです" }
+    }
+    if (!itemName || itemName.trim() === '') {
+        return { success: false, error: "品名が不正です" }
+    }
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        return { success: false, error: "数量が不正です" }
+    }
+
     try{
     // 「既存のデータ（existingItem）」という箱を用意し、Prisma（データベース操作ツール）を使って、条件に合うデータを「1件だけ探し
     const existingItem = await prisma.shopping.findFirst({
@@ -183,6 +231,9 @@ export async function quickAddShoppingItem(categoryId: number, itemName: string,
 // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 // ★ 購入済みアイテムを冷蔵庫（在庫）へ移行する関数
 export async function transferToFridge(shoppingId: number) {
+    if (!Number.isInteger(shoppingId) || shoppingId <= 0) {
+        return { success: false, error: "不正なIDです" }
+    }
     try {
         const item = await prisma.shopping.findUnique({
             where: { id: shoppingId },

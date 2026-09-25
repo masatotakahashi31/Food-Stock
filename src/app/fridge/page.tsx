@@ -31,6 +31,7 @@ export default async function FridgePage(){
       className="px-8 mr-8 bg-green-300 hover:bg-green-500 rounded-md transition-colors"
       href="/fridge/new">新しい食材を登録</Link>
       </div>
+      {/* initialStocks という名前の箱に、先ほど取得した stocksを入れて、StockList 側に渡しています */}
       <StockList initialStocks={stocks} />
     </div>
   )
