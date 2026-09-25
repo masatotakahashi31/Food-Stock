@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { addStock } from '../actions'
 
 import StockForm from '@/components/StockForm'
-import Link from 'next/link'
 
 //在庫登録画面を表示するメイン関数を定義
 export default async function NewStockPage() {

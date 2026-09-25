@@ -6,7 +6,6 @@ import {prisma} from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 //処理が終わった後に別の画面へ強制的に移動させるための関数を読み込み
 import {redirect} from 'next/navigation'
-import { text } from 'stream/consumers'
 
 //フォームから送られてきたデータ（formData）を受け取る非同期関数を定義し、外部から呼び出せるよう公開（export
 export async function addStock(formData: FormData){
